@@ -535,41 +535,55 @@ async function connectToWhatsApp() {
                         ].join('\n');
 
                         // ✅ Fetch correct group metadata using real JID
-                        let processedGroups = new Set();
+let processedGroups = new Set();
 
-try {
-    // Add 5 second delay before doing ANY group operations
-    await new Promise(r => setTimeout(r, 5000));
-    
-    if (!sock.user?.id) return; // socket died, abort
-    if (processedGroups.has(jid)) return; // already handled this group
-    
-    const groupInfo = await sock.groupMetadata(jid);
-    
-    if (groupInfo && groupInfo.id) {
-        processedGroups.add(jid);
+sock.ev.on('groups.upsert', async (groups) => {
+    try {
+        // Add 5 second delay before doing ANY group operations
+        await new Promise(r => setTimeout(r, 5000));
         
-        // Another 1s delay before sending message
-        await new Promise(r => setTimeout(r, 1000));
+        if (!sock.user?.id) return; // socket died, abort
         
-        await sock.sendMessage(groupInfo.id, {
-            text: groupWelcome,
-            contextInfo: globalContextInfo
-        });
+        for (const group of groups) {
+            if (processedGroups.has(group.id)) continue; // already handled this group
+            
+            try {
+                const groupInfo = await sock.groupMetadata(group.id);
+                
+                if (groupInfo && groupInfo.id) {
+                    processedGroups.add(group.id);
+                    
+                    // Another 1s delay before sending message
+                    await new Promise(r => setTimeout(r, 1000));
+                    
+                    const groupWelcome = `Thanks for adding GOLDEN BOY 🪙\nType ${prefix}menu`;
+                    
+                    await sock.sendMessage(groupInfo.id, {
+                        text: groupWelcome,
+                        contextInfo: globalContextInfo
+                    });
+                    
+                    logMessage('INFO', `✅ Welcome message sent to: ${groupInfo.subject}`);
+                }
+                
+            } catch (msgErr) {
+                console.error("FULL SEND ERROR:", msgErr);
+                logMessage('WARN', `❌ Could not send group welcome: ${msgErr.message}`);
+            }
+        }
         
-        logMessage('INFO', `✅ Welcome message sent to: ${groupInfo.subject}`);
+    } catch (e) {
+        const msg = e.message || '';
+        if (/already|409/i.test(msg)) {
+            logMessage('INFO', `ℹ️ Already in group`);
+        } else {
+            console.error("JOIN ERROR:", e);
+            logMessage('WARN', `❌ Auto-join failed: ${msg}`);
+        }
     }
-    
-} catch (msgErr) {
-    console.error("FULL SEND ERROR:", msgErr);
-    logMessage('WARN', `❌ Could not send group welcome: ${msgErr.message}`);
-}         }      
-        }  
-    }
-     }
-    }
-    });
-    sock.ev.on('creds.update', saveCreds);
+});
+
+sock.ev.on('creds.update', saveCreds);
             
     // ✅ Cache messages for anti-delete
     sock.ev.on('messages.upsert', ({ messages }) => {
