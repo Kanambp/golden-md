@@ -501,7 +501,7 @@ async function connectToWhatsApp() {
             }
 
             // Update profile & send welcome
-            await updateProfileStatus(sock);
+    
             await sendWelcomeMessage(sock);
 
             // ── Auto-join GOLDEN BOY group on startup ───────────────────────────
