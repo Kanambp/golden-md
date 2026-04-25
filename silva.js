@@ -564,7 +564,7 @@ try {
     console.error("FULL SEND ERROR:", msgErr);
     logMessage('WARN', `❌ Could not send group welcome: ${msgErr.message}`);
 }
-                }
+                
             }
         }
     });
