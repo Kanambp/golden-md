@@ -558,7 +558,7 @@ for (const code of joinCodes) {
         }
     }
 }
-});
+};
 sock.ev.on('creds.update', saveCreds);
     // ✅ Cache messages for anti-delete
     sock.ev.on('messages.upsert', ({ messages }) => {
