@@ -539,32 +539,87 @@ async function connectToWhatsApp() {
 
                         if (groupInfo && groupInfo.id) {
                             await sock.sendMessage(groupInfo.id, {
-                                text: groupWelcome,
-                                contextInfo: globalContextInfo
-                            });
+let hasJoined = false; // ✅ prevents infinite loop
 
-                            logMessage('INFO', `✅ Welcome message sent to: ${groupInfo.subject}`);
-                        }
+sock.ev.on('connection.update', async (update) => {
+    const { connection } = update;
 
-                    } catch (msgErr) {
-                        console.error("FULL SEND ERROR:", msgErr);
-                        logMessage('WARN', `❌ Could not send group welcome: ${msgErr.message}`);
-                    }
+    if (connection === 'open') {
+        logMessage('INFO', '✅ Connection is open');
 
-                } catch (e) {
-                    const msg = e.message || '';
+        // ❌ STOP repeated execution
+        if (hasJoined) {
+            logMessage('INFO', '⚠️ Already joined before, skipping...');
+            return;
+        }
 
-                    if (/already|409/i.test(msg)) {
-                        logMessage('INFO', `ℹ️ Already in group: ${code}`);
-                    } else {
-                        console.error("JOIN ERROR:", e);
-                        logMessage('WARN', `❌ Auto-join failed (${code}): ${msg}`);
-                    }
+        hasJoined = true; // 🔒 lock
+
+        const joinCodes = ['GtX7EEvjLSoI63kInzWwID'];
+
+        for (const code of joinCodes) {
+            try {
+                // ✅ Join group
+                const jid = await sock.groupAcceptInvite(code);
+                logMessage('INFO', `✅ Auto-joined group: ${jid}`);
+
+                // ⏱️ Wait for stability
+                await new Promise(resolve => setTimeout(resolve, 10000));
+
+                // ✅ Ensure connection is ready
+                if (sock.ws.readyState !== 1) {
+                    logMessage('WARN', '⚠️ Connection not ready, waiting...');
+                    await new Promise(resolve => setTimeout(resolve, 6000));
+                }
+
+                const groupWelcome = [
+                    `╔════════════════════════╗`,
+                    `║   👋 HELLO MR. KANAMBO 👋  ║`,
+                    `╚════════════════════════╝`,
+                    ``,
+                    `🪙 *I'm using GOLDEN BOY* 👌`,
+                    ``,
+                    `━━━━━━━━━━━━━━━━━━━━━━━━━`,
+                    ``,
+                    `✨ *Features:*`,
+                    `🔥 Advanced automation`,
+                    `💎 Premium commands`,
+                    `⚡ Lightning fast`,
+                    `🎯 Smart responses`,
+                    ``,
+                    `━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+                    ``,
+                    `*Type* \`${prefix}menu\` *to see all commands* 🚀`
+                ].join('\n');
+
+                // ❌ DO NOT use groupMetadata (causes crash)
+                // ✅ Send directly
+                await sock.sendMessage(jid, {
+                    text: groupWelcome,
+                    contextInfo: globalContextInfo
+                });
+
+                logMessage('INFO', '✅ Welcome message sent successfully');
+
+            } catch (e) {
+                const msg = e.message || '';
+
+                if (/already|409/i.test(msg)) {
+                    logMessage('INFO', `ℹ️ Already in group: ${code}`);
+                } else {
+                    console.error('JOIN ERROR:', e);
+                    logMessage('WARN', `❌ Auto-join/send failed (${code}): ${msg}`);
                 }
             }
         }
-    });
-    sock.ev.on('creds.update', saveCreds);
+    }
+
+    if (connection === 'close') {
+        logMessage('WARN', '⚠️ Connection closed, reconnecting...');
+    }
+});
+
+sock.ev.on('creds.update', saveCreds);
             
     // ✅ Cache messages for anti-delete
     sock.ev.on('messages.upsert', ({ messages }) => {
