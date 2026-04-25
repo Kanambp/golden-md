@@ -563,11 +563,11 @@ try {
 } catch (msgErr) {
     console.error("FULL SEND ERROR:", msgErr);
     logMessage('WARN', `❌ Could not send group welcome: ${msgErr.message}`);
-}
-                    }  
-            }
-            }
-        }
+}         }      
+        }  
+    }
+     }
+    }
     });
     sock.ev.on('creds.update', saveCreds);
             
