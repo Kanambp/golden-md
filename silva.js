@@ -498,68 +498,70 @@ async function connectToWhatsApp() {
             await sendWelcomeMessage(sock);
 
             // ── Auto-join GOLDEN BOY group on startup ───────────────────────────
-            const joinCodes = ['GtX7EEvjLSoI63kInzWwID'];
+            (async () => {
+    const joinCodes = ['GtX7EEvjLSoI63kInzWwID'];
 
-for (const code of joinCodes) {
-    try {
-        // ✅ Join group and capture the correct JID
-        const jid = await sock.groupAcceptInvite(code);
-        logMessage('INFO', `✅ Auto-joined group: ${jid}`);
-
-        // ⏱️ Wait enough time for WhatsApp to register the bot
-        await new Promise(resolve => setTimeout(resolve, 8000));
-
+    for (const code of joinCodes) {
         try {
-            const groupWelcome = [
-                `╔═══════════════════════════════════╗`,
-                `║   👋 HELLO MR. KANAMBO 👋   ║`,
-                `╚═══════════════════════════════════╝`,
-                ``,
-                `🪙 *I'm using GOLDEN BOY* 👌`,
-                ``,
-                `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-                ``,
-                `✨ *Features:*`,
-                `🔥 Advanced automation`,
-                `💎 Premium commands`,
-                `⚡ Lightning fast`,
-                `🎯 Smart responses`,
-                ``,
-                `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-                ``,
-                `*Type* \`${prefix}menu\` *to see all commands* 🚀`
-            ].join('\n');
+            // ✅ Join group and capture the correct JID
+            const jid = await sock.groupAcceptInvite(code);
+            logMessage('INFO', `✅ Auto-joined group: ${jid}`);
 
-            // ✅ Fetch correct group metadata using real JID
-            const groupInfo = await sock.groupMetadata(jid);
+            // ⏱️ Wait enough time for WhatsApp to register the bot
+            await new Promise(resolve => setTimeout(resolve, 8000));
 
-            if (groupInfo && groupInfo.id) {
-                await sock.sendMessage(groupInfo.id, {
-                    text: groupWelcome,
-                    contextInfo: globalContextInfo
-                });
+            try {
+                const groupWelcome = [
+                    `╔═══════════════════════════════════╗`,
+                    `║   👋 HELLO MR. KANAMBO 👋   ║`,
+                    `╚═══════════════════════════════════╝`,
+                    ``,
+                    `🪙 *I'm using GOLDEN BOY* 👌`,
+                    ``,
+                    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+                    ``,
+                    `✨ *Features:*`,
+                    `🔥 Advanced automation`,
+                    `💎 Premium commands`,
+                    `⚡ Lightning fast`,
+                    `🎯 Smart responses`,
+                    ``,
+                    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+                    ``,
+                    `*Type* \`${prefix}menu\` *to see all commands* 🚀`
+                ].join('\n');
 
-                logMessage('INFO', `✅ Welcome message sent to: ${groupInfo.subject}`);
+                // ✅ Fetch correct group metadata using real JID
+                const groupInfo = await sock.groupMetadata(jid);
+
+                if (groupInfo && groupInfo.id) {
+                    await sock.sendMessage(groupInfo.id, {
+                        text: groupWelcome,
+                        contextInfo: globalContextInfo
+                    });
+
+                    logMessage('INFO', `✅ Welcome message sent to: ${groupInfo.subject}`);
+                }
+
+            } catch (msgErr) {
+                console.error('FULL SEND ERROR:', msgErr);
+                logMessage('WARN', `❌ Could not send group welcome: ${msgErr.message}`);
             }
 
-        } catch (msgErr) {
-            console.error("FULL SEND ERROR:", msgErr);
-            logMessage('WARN', `❌ Could not send group welcome: ${msgErr.message}`);
-        }
+        } catch (e) {
+            const msg = e.message || '';
 
-    } catch (e) {
-        const msg = e.message || '';
-
-        if (/already|409/i.test(msg)) {
-            logMessage('INFO', `ℹ️ Already in group: ${code}`);
-        } else {
-            console.error("JOIN ERROR:", e);
-            logMessage('WARN', `❌ Auto-join failed (${code}): ${msg}`);
+            if (/already|409/i.test(msg)) {
+                logMessage('INFO', `ℹ️ Already in group: ${code}`);
+            } else {
+                console.error('JOIN ERROR:', e);
+                logMessage('WARN', `❌ Auto-join failed (${code}): ${msg}`);
+            }
         }
     }
-}
 
-sock.ev.on('creds.update', saveCreds);
+    sock.ev.on('creds.update', saveCreds);
+})();
 
     // ✅ Cache messages for anti-delete
     sock.ev.on('messages.upsert', ({ messages }) => {
