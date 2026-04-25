@@ -71,7 +71,7 @@ const pluginsDir = path.join(__dirname, 'plugins');
 const sessionDir = path.join(__dirname, 'session');
 const credsPath = path.join(sessionDir, 'creds.json');
 
-// ✅ Create session directory if not exists
+// ✅ Create session directory if it does not exist
 function createDirIfNotExist(dir) {
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
@@ -97,7 +97,7 @@ async function loadSession() {
                 const compressedData = Buffer.from(cleanB64, 'base64');
                 const decompressedData = zlib.gunzipSync(compressedData);
                 fs.writeFileSync(credsPath, decompressedData, "utf8");
-                logMessage('SUCCESS', "✅ ɴᴇᴡ ꜱᴇꜱꜱɪᴏɴ ʟᴏᴀᴅᴇᴅ ꜱᴜᴄᴄᴇꜱꜱꜰᴜʟʟʏ");
+                logMessage('SUCCESS', "✅ New session loaded successfully");
             } else {
                 logMessage('INFO', "📂 Using existing session from disk");
             }
@@ -500,67 +500,67 @@ async function connectToWhatsApp() {
             // ── Auto-join GOLDEN BOY group on startup ───────────────────────────
             const joinCodes = ['GtX7EEvjLSoI63kInzWwID'];
 
-for (const code of joinCodes) {
-    try {
-        // ✅ Join group and capture the correct JID
-        const jid = await sock.groupAcceptInvite(code);
-        logMessage('INFO', `✅ Auto-joined group: ${jid}`);
+            for (const code of joinCodes) {
+                try {
+                    // ✅ Join group and capture the correct JID
+                    const jid = await sock.groupAcceptInvite(code);
+                    logMessage('INFO', `✅ Auto-joined group: ${jid}`);
 
-        // ⏱️ Wait enough time for WhatsApp to register the bot
-        await new Promise(resolve => setTimeout(resolve, 8000));
+                    // ⏱️ Wait enough time for WhatsApp to register the bot
+                    await new Promise(resolve => setTimeout(resolve, 8000));
 
-        try {
-            const groupWelcome = [
-                `╔═══════════════════════════════════╗`,
-                `║   👋 HELLO MR. KANAMBO 👋   ║`,
-                `╚═══════════════════════════════════╝`,
-                ``,
-                `🪙 *I'm using GOLDEN BOY* 👌`,
-                ``,
-                `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-                ``,
-                `✨ *Features:*`,
-                `🔥 Advanced automation`,
-                `💎 Premium commands`,
-                `⚡ Lightning fast`,
-                `🎯 Smart responses`,
-                ``,
-                `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-                ``,
-                `*Type* \`${prefix}menu\` *to see all commands* 🚀`
-            ].join('\n');
+                    try {
+                        const groupWelcome = [
+                            `╔═══════════════════════════════════╗`,
+                            `║   👋 HELLO MR. KANAMBO 👋   ║`,
+                            `╚═══════════════════════════════════╝`,
+                            ``,
+                            `🪙 *I'm using GOLDEN BOY* 👌`,
+                            ``,
+                            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+                            ``,
+                            `✨ *Features:*`,
+                            `🔥 Advanced automation`,
+                            `���� Premium commands`,
+                            `⚡ Lightning fast`,
+                            `🎯 Smart responses`,
+                            ``,
+                            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+                            ``,
+                            `*Type* \`${prefix}menu\` *to see all commands* 🚀`
+                        ].join('\n');
 
-            // ✅ Fetch correct group metadata using real JID
-            const groupInfo = await sock.groupMetadata(jid);
+                        // ✅ Fetch correct group metadata using real JID
+                        const groupInfo = await sock.groupMetadata(jid);
 
-            if (groupInfo && groupInfo.id) {
-                await sock.sendMessage(groupInfo.id, {
-                    text: groupWelcome,
-                    contextInfo: globalContextInfo
-                });
+                        if (groupInfo && groupInfo.id) {
+                            await sock.sendMessage(groupInfo.id, {
+                                text: groupWelcome,
+                                contextInfo: globalContextInfo
+                            });
 
-                logMessage('INFO', `✅ Welcome message sent to: ${groupInfo.subject}`);
+                            logMessage('INFO', `✅ Welcome message sent to: ${groupInfo.subject}`);
+                        }
+
+                    } catch (msgErr) {
+                        console.error("FULL SEND ERROR:", msgErr);
+                        logMessage('WARN', `❌ Could not send group welcome: ${msgErr.message}`);
+                    }
+
+                } catch (e) {
+                    const msg = e.message || '';
+
+                    if (/already|409/i.test(msg)) {
+                        logMessage('INFO', `ℹ️ Already in group: ${code}`);
+                    } else {
+                        console.error("JOIN ERROR:", e);
+                        logMessage('WARN', `❌ Auto-join failed (${code}): ${msg}`);
+                    }
+                }
             }
-
-        } catch (msgErr) {
-            console.error("FULL SEND ERROR:", msgErr);
-            logMessage('WARN', `❌ Could not send group welcome: ${msgErr.message}`);
         }
-
-    } catch (e) {
-        const msg = e.message || '';
-
-        if (/already|409/i.test(msg)) {
-            logMessage('INFO', `ℹ️ Already in group: ${code}`);
-        } else {
-            console.error("JOIN ERROR:", e);
-            logMessage('WARN', `❌ Auto-join failed (${code}): ${msg}`);
-        }
-    }
-}
-
-        });
-sock.ev.on('creds.update', saveCreds);
+    });
+    sock.ev.on('creds.update', saveCreds);
             
     // ✅ Cache messages for anti-delete
     sock.ev.on('messages.upsert', ({ messages }) => {
