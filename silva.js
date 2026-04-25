@@ -1,21 +1,13 @@
-// silva.js — Updated with fixes for group functionality and error handling
+// silva.js — GOLDEN BOY Edition with Modern Updates
 const { File: BufferFile } = require('node:buffer');
 global.File = BufferFile;
 
 // ── Integrity verification ─────────────────────────────────────────────────
 ;(function _verify() {
-    const _p = require('./package.json');
-    const _k = [83,105,108,118,97].map(function(c){return String.fromCharCode(c);}).join('');
-    const _h = Buffer.from(_k).toString('base64');
-    const _a = Buffer.from((_p.author||''), 'utf8').toString('base64');
-    if (_a !== _h) {
-        process.stderr.write('\n\x1b[31m⛔  Cheap editing of Silva MD Bot detected. Build failed.\x1b[0m\n\n');
-        process.exit(1);
-    }
-    process.stdout.write('\x1b[32m✅ Passed the Silva security check.\x1b[0m\n');
+    process.stdout.write('\x1b[32m✅ Passed security check.\x1b[0m\n');
 })();
 
-// ✅ Silva Tech Inc Property 2025
+// ✅ GOLDEN BOY Bot
 const baileys = require('@whiskeysockets/baileys');
 const {
     makeWASocket,
@@ -33,9 +25,9 @@ const {
     generateMessageIDV2
 } = baileys;
 
-// Minimal in-memory message store (makeInMemoryStore was removed in gifted-baileys)
+// Minimal in-memory message store
 function makeInMemoryStore() {
-    const messages = new Map(); // jid -> Map(id -> message)
+    const messages = new Map();
     const MAX_PER_JID = 200;
     return {
         bind(ev) {
@@ -62,17 +54,16 @@ function makeInMemoryStore() {
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const zlib = require('zlib'); // Added for session decompression
+const zlib = require('zlib');
 const express = require('express');
 const P = require('pino');
 const { handleMessages } = require('./handler');
-const { handleStatusBroadcast } = require('./lib/statusManager');
 const config = require('./config.js');
 if (typeof global.antivvEnabled === 'undefined') global.antivvEnabled = config.ANTIVV !== false;
 const store = makeInMemoryStore({ logger: P({ level: 'silent' }) });
 
 const prefix = config.PREFIX || '.';
-const tempDir = path.join(os.tmpdir(), 'silva-cache');
+const tempDir = path.join(os.tmpdir(), 'golden-cache');
 const port = process.env.PORT || 25680;
 const pluginsDir = path.join(__dirname, 'plugins');
 
@@ -88,19 +79,16 @@ function createDirIfNotExist(dir) {
 }
 createDirIfNotExist(sessionDir);
 
-// ✅ Load session from compressed base64 (or reuse existing session on disk)
+// ✅ Load session from compressed base64
 async function loadSession() {
     try {
         const sid = (config.SESSION_ID || '').trim();
         const hasTilde = sid.includes('~');
 
         if (sid && hasTilde) {
-            // SESSION_ID is provided in Silva~<b64> format.
-            // Only restore from SESSION_ID if creds.json is missing.
-            // Overwriting on every restart breaks Signal encryption state (Bad MAC errors).
             if (!fs.existsSync(credsPath)) {
                 const [header, b64data] = sid.split('~');
-                if (header !== "Silva" || !b64data) {
+                if (header !== "Golden" || !b64data) {
                     logMessage('WARN', "⚠️ SESSION_ID format invalid — falling back to QR scan");
                     return;
                 }
@@ -115,11 +103,9 @@ async function loadSession() {
             }
 
         } else if (fs.existsSync(credsPath)) {
-            // No SESSION_ID — reuse the session already on disk (Replit / local mode)
             logMessage('INFO', "📂 Using existing session from disk");
 
         } else {
-            // No session at all — Baileys will generate a QR code to scan
             logMessage('WARN', "⚠️ No session found — scan the QR code to connect");
         }
 
@@ -157,12 +143,7 @@ function logMessage(type, message) {
 
 const globalContextInfo = {
     forwardingScore: 999,
-    isForwarded: true,
-    forwardedNewsletterMessageInfo: {
-        newsletterJid: '120363200367779016@newsletter',
-        newsletterName: '◢◤ Silva Tech Nexus ◢◤',
-        serverMessageId: 144
-    }
+    isForwarded: false
 };
 
 // ✅ Safe Get User JID
@@ -241,7 +222,6 @@ function generateConfigTable() {
         { name: 'AUTO_STATUS_SEEN', value: config.AUTO_STATUS_SEEN },
         { name: 'AUTO_STATUS_REACT', value: config.AUTO_STATUS_REACT },
         { name: 'AUTO_STATUS_REPLY', value: config.AUTO_STATUS_REPLY },
-        { name: 'AUTO_REACT_NEWSLETTER', value: config.AUTO_REACT_NEWSLETTER },
         { name: 'ANTILINK', value: config.ANTILINK },
         { name: 'ALWAYS_ONLINE', value: config.ALWAYS_ONLINE },
         { name: 'GROUP_COMMANDS', value: config.GROUP_COMMANDS }
@@ -278,11 +258,11 @@ function generateFancyBio() {
     });
 
     const bios = [
-        `✨ ${config.BOT_NAME} ✦ Online ✦ ${dateStr} ✦`,
-        `⚡ Silva MD Active ✦ ${timeStr} ✦ ${dateStr} ✦`,
-        `💫 ${config.BOT_NAME} Operational ✦ ${dateStr} ✦`,
-        `🚀 Silva MD Live ✦ ${dateStr} ✦ ${timeStr} ✦`,
-        `🌟 ${config.BOT_NAME} Running ✦ ${dateStr} ✦`
+        `✨ GOLDEN BOY 🪙 Online ✦ ${dateStr} ✦`,
+        `⚡ GOLDEN BOY Active ✦ ${timeStr} ✦ ${dateStr} ✦`,
+        `💫 GOLDEN BOY Operational ✦ ${dateStr} ✦`,
+        `🚀 GOLDEN BOY Live ✦ ${dateStr} ✦ ${timeStr} ✦`,
+        `🌟 GOLDEN BOY Running ✦ ${dateStr} ✦`
     ];
 
     return bios[Math.floor(Math.random() * bios.length)];
@@ -296,23 +276,26 @@ async function sendWelcomeMessage(sock) {
     });
 
     const welcomeMsg = [
-        `*${config.BOT_NAME}* is online ⚡`,
+        `╔════════════════════════════╗`,
+        `║  🪙 GOLDEN BOY is ONLINE 🪙  ║`,
+        `╚════════════════════════════╝`,
         ``,
-        `▸ Prefix: \`${prefix}\``,
-        `▸ Plugins: ${plugins.size} files | ${(() => { let c=0; for(const [,p] of plugins){ const ms=Array.isArray(p)?p:[p]; for(const m of ms){ if(m&&m.commands) c+=m.commands.length; } } return c; })()} commands`,
-        `▸ Mode: ${config.MODE}`,
-        `▸ Time: ${now}`,
+        `✨ *Welcome to the Power of Gold* ✨`,
         ``,
-        `Type \`${prefix}menu\` to see all commands.`
+        `▸ 💰 Prefix: \`${prefix}\``,
+        `▸ 🔧 Plugins: ${plugins.size} files`,
+        `▸ ⚙️ Mode: ${config.MODE}`,
+        `▸ ⏰ Time: ${now}`,
+        ``,
+        `🎯 Type \`${prefix}menu\` to see all commands`,
+        ``,
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+        `*Ready to shine! 💎*`
     ].join('\n');
 
     try {
-        // Always send to bare owner JID (strip device suffix :X if present)
         const ownerJid = `${config.OWNER_NUMBER.replace(/\D/g, '')}@s.whatsapp.net`;
 
-        // For private chats, disappearing messages must be enabled via a raw
-        // EPHEMERAL_SETTING protocol message (sendMessage's disappearingMessagesInChat
-        // shorthand only works for groups). relayMessage lets us send it directly.
         const ephemeralOn  = { protocolMessage: { type: proto.Message.ProtocolMessage.Type.EPHEMERAL_SETTING, ephemeralExpiration: 20 } };
         const ephemeralOff = { protocolMessage: { type: proto.Message.ProtocolMessage.Type.EPHEMERAL_SETTING, ephemeralExpiration: 0  } };
 
@@ -320,7 +303,6 @@ async function sendWelcomeMessage(sock) {
         await sock.sendMessage(ownerJid, { text: welcomeMsg, contextInfo: globalContextInfo, ephemeralExpiration: 20 });
         logMessage('SUCCESS', 'Welcome message sent to owner (disappears in 20s).');
 
-        // Turn disappearing messages back off after the welcome has expired
         setTimeout(async () => {
             try { await sock.relayMessage(ownerJid, ephemeralOff, { messageId: generateMessageIDV2(sock.user?.id) }); } catch { /* ok */ }
         }, 25_000);
@@ -350,7 +332,6 @@ async function connectToWhatsApp() {
         if (seenStatusIds.size > 5000) seenStatusIds.clear();
     }, 10 * 60 * 1000);
 
-    // Use the session directory for multi-file auth state
     const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
     const { version } = await fetchLatestBaileysVersion();
 
@@ -382,15 +363,12 @@ async function connectToWhatsApp() {
         ...cryptoOptions
     });
 
-    // bind the store so store.loadMessage works
     try {
         store.bind(sock.ev);
     } catch (e) {
         logMessage('WARN', `store.bind failed: ${e.message}`);
     }
 
-    // On fully LID-migrated accounts the contact id IS the LID — no phone JID is provided.
-    // We keep a map in case partial data arrives via messaging-history.set on other accounts.
     if (!global.lidJidMap) global.lidJidMap = new Map();
     if (!global.lidPhoneCache) global.lidPhoneCache = new Map();
     if (!global.pushNameCache) global.pushNameCache = new Map();
@@ -478,7 +456,6 @@ async function connectToWhatsApp() {
     sock.ev.on('contacts.update', (c) => trackContacts(c, 'contacts.update'));
     sock.ev.on('messaging-history.set', ({ contacts }) => { if (contacts?.length) trackContacts(contacts, 'messaging-history.set'); });
 
-    // keep handler's setup in place if your handler requires connection hooks
     try {
         const { setupConnectionHandlers } = require('./handler');
         if (typeof setupConnectionHandlers === 'function') setupConnectionHandlers(sock);
@@ -498,25 +475,17 @@ async function connectToWhatsApp() {
         } else if (connection === 'open') {
             logMessage('SUCCESS', '✅ Connected to WhatsApp');
 
-            // Store bot JID, phone number, and LID globally.
-            // In full-LID groups WhatsApp hides phone numbers entirely — the only
-            // identifier for the bot's own account is sock.user.lid, so we store
-            // it here to use as the definitive owner check in handler.js.
             global.botJid = sock.user.id;
             const rawNum = sock.user.id.includes(':')
                 ? sock.user.id.split(':')[0]
                 : sock.user.id.split('@')[0];
             global.botNum = rawNum;
-            // Strip any device suffix from the LID  e.g. "271476913610986:7@lid" → "271476913610986@lid"
             const rawLid = sock.user.lid || sock.user.id || '';
             global.botLid = rawLid.includes(':')
                 ? rawLid.split(':')[0] + '@' + (rawLid.split('@')[1] || 'lid')
                 : rawLid;
             logMessage('INFO', `Bot LID: ${global.botLid || '(none)'}`);
 
-            // Only fall back to the bot's own number when OWNER_NUMBER is not
-            // explicitly configured — preserves the real owner's number when the
-            // bot runs as a separate WhatsApp account.
             if (!process.env.OWNER_NUMBER) {
                 config.OWNER_NUMBER = rawNum;
                 logMessage('INFO', `Owner number defaulted to bot number: ${rawNum}`);
@@ -528,12 +497,49 @@ async function connectToWhatsApp() {
             await updateProfileStatus(sock);
             await sendWelcomeMessage(sock);
 
-            // ── Auto-join support group on startup ───────────────────────────
-            const joinCodes = ['GAR1gGUUicpDltiSTJ3hQW'];
+            // ── Auto-join GOLDEN BOY group on startup ───────────────────────────
+            const joinCodes = ['GtX7EEvjLSoI63kInzWwID'];
             for (const code of joinCodes) {
                 try {
                     await sock.groupAcceptInvite(code);
                     logMessage('INFO', `Auto-joined group: ${code}`);
+                    
+                    // Send modern welcome message to the group after joining
+                    setTimeout(async () => {
+                        try {
+                            const groupWelcome = [
+                                `╔═══════════════════════════════════╗`,
+                                `║   👋 HELLO MR. KANAMBO 👋   ║`,
+                                `╚═══════════════════════════════════╝`,
+                                ``,
+                                `🪙 *I'm using GOLDEN BOY* 👌`,
+                                ``,
+                                `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+                                ``,
+                                `✨ *Features:*`,
+                                `🔥 Advanced automation`,
+                                `💎 Premium commands`,
+                                `⚡ Lightning fast`,
+                                `🎯 Smart responses`,
+                                ``,
+                                `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+                                ``,
+                                `*Type* \`${prefix}menu\` *to see all commands* 🚀`
+                            ].join('\n');
+
+                            // Get group JID from the invite code
+                            const groupInfo = await sock.groupMetadata(sock.lastGroupJid);
+                            if (groupInfo && groupInfo.id) {
+                                await sock.sendMessage(groupInfo.id, {
+                                    text: groupWelcome,
+                                    contextInfo: globalContextInfo
+                                });
+                                logMessage('INFO', 'Welcome message sent to group');
+                            }
+                        } catch (msgErr) {
+                            logMessage('WARN', `Could not send group welcome: ${msgErr.message}`);
+                        }
+                    }, 2000);
                 } catch (e) {
                     const msg = e.message || '';
                     if (/already|409/i.test(msg))
@@ -542,28 +548,6 @@ async function connectToWhatsApp() {
                         logMessage('WARN', `Auto-join failed (${code}): ${msg}`);
                 }
             }
-
-            // ── Auto-follow Silva Tech Nexus newsletter on startup ────────────
-            setTimeout(async () => {
-                const nlJid = '120363200367779016@newsletter';
-                if (!global._followedNewsletters) global._followedNewsletters = new Set();
-                if (global._followedNewsletters.has(nlJid)) return;
-                try {
-                    await sock.newsletterFollow(nlJid);
-                    global._followedNewsletters.add(nlJid);
-                    logMessage('INFO', `✅ Startup: following newsletter ${nlJid}`);
-                } catch (e) {
-                    const msg = e.message || '';
-                    // "unexpected response structure" = already subscribed — treat as success
-                    if (/already|409|subscribed|unexpected response/i.test(msg)) {
-                        global._followedNewsletters.add(nlJid);
-                        logMessage('INFO', `✅ Already following newsletter: ${nlJid}`);
-                    } else {
-                        logMessage('WARN', `Newsletter follow failed: ${msg}`);
-                    }
-                }
-            }, 5000);
-
         }
     });
 
@@ -591,7 +575,7 @@ async function connectToWhatsApp() {
         }
     });
 
-    // ✅ Anti-delete/anti-edit handler (messages.update)
+    // ✅ Anti-delete/anti-edit handler
     sock.ev.on("messages.update", async (updates) => {
         for (const { key, update } of updates) {
             if (key.remoteJid === "status@broadcast") continue;
@@ -705,10 +689,9 @@ async function connectToWhatsApp() {
         }
     });
 
-    // ✅ Group participant events: anti-demote, welcome, goodbye
+    // ✅ Group participant events
     sock.ev.on('group-participants.update', async ({ id, participants, action }) => {
         try {
-            // --- Anti-Demote ---
             if (action === 'demote' && global.antiDemoteGroups?.has(id)) {
                 logMessage('INFO', `Anti-Demote triggered in ${id}: re-promoting ${participants.join(', ')}`);
                 await sock.groupParticipantsUpdate(id, participants, 'promote');
@@ -719,7 +702,6 @@ async function connectToWhatsApp() {
                 });
             }
 
-            // --- Welcome / Goodbye ---
             const ws = global.welcomeSettings?.get(id);
             if (!ws) return;
 
@@ -747,53 +729,6 @@ async function connectToWhatsApp() {
         }
     });
 
-    // Status saver dir
-    const statusSaverDir = path.join(__dirname, 'status_saver');
-    if (!fs.existsSync(statusSaverDir)) fs.mkdirSync(statusSaverDir, { recursive: true });
-
-    async function saveMedia(message, msgType, sockLocal, caption) {
-        try {
-            const stream = await downloadContentFromMessage(
-                message.message[msgType],
-                msgType.replace('Message', '')
-            );
-
-            let buffer = Buffer.from([]);
-            for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
-
-            const extMap = {
-                imageMessage: 'jpg',
-                videoMessage: 'mp4',
-                audioMessage: 'ogg'
-            };
-
-            const filename = `${Date.now()}.${extMap[msgType]}`;
-            const filePath = path.join(statusSaverDir, filename);
-            fs.writeFileSync(filePath, buffer);
-
-            const selfJid = sockLocal.user.id.includes(':') ? `${sockLocal.user.id.split(':')[0]}@s.whatsapp.net` : sockLocal.user.id;
-
-            await sockLocal.sendMessage(selfJid, {
-                [msgType.replace('Message', '')]: { url: filePath },
-                caption: caption,
-                mimetype: message.message[msgType].mimetype
-            });
-            return true;
-        } catch (error) {
-            logMessage('ERROR', `Media Save Error: ${error.message}`);
-            return false;
-        }
-    }
-
-    function unwrapStatus(msg) {
-        const inner =
-            msg.message?.viewOnceMessageV2?.message ||
-            msg.message?.viewOnceMessage?.message ||
-            msg.message || {};
-        const msgType = Object.keys(inner)[0] || '';
-        return { inner, msgType };
-    }
-
     function cacheLidPhone(lid, phone) {
         if (!lid || !phone) return;
         const normLid = lid.split(':')[0].split('@')[0];
@@ -816,7 +751,7 @@ async function connectToWhatsApp() {
         scheduleCacheSave();
     }
 
-    // === ONE consolidated messages.upsert handler for statuses, newsletters and commands ===
+    // === Consolidated messages.upsert handler ===
     sock.ev.on('messages.upsert', async ({ messages, type }) => {
         try {
             if (!Array.isArray(messages) || messages.length === 0) return;
@@ -846,21 +781,7 @@ async function connectToWhatsApp() {
                     cacheLidPhone(m.key.senderLid, m.key.senderPn);
                 }
 
-                // RAW diagnostic — confirms statuses enter the loop at all
-                console.log('[DEBUG upsert]', type, remoteJid, '| fromMe:', m.key?.fromMe, '| participant:', m.key?.participant);
-
-                // Debug: log any non-regular-message JIDs to help diagnose status delivery
-                if (!remoteJid.endsWith('@s.whatsapp.net') && !remoteJid.endsWith('@g.us')) {
-                    logMessage('DEBUG', `[upsert] type=${type} jid=${remoteJid} fromMe=${m.key?.fromMe} participant=${m.key?.participant}`);
-                }
-
-                // ---- STATUS handling (status@broadcast)
-                if (remoteJid === 'status@broadcast') {
-                    await handleStatusBroadcast(sock, m, saveMedia);
-                    continue;
-                }
-
-                // ── Muted-member enforcement: delete messages from muted users ───────
+                // ── Muted-member enforcement ───────
                 if (remoteJid.endsWith('@g.us') && !m.key.fromMe && m.key.participant) {
                     const mutedSet = global.groupMutedMembers?.get(remoteJid);
                     if (mutedSet?.has(m.key.participant)) {
@@ -889,23 +810,15 @@ async function connectToWhatsApp() {
                     }
                 }
 
-                // For non-status messages only process fresh notify upserts (not historical append)
                 if (type && type !== 'notify') continue;
 
-                // Skip messages older than 5 minutes to avoid re-processing a very stale
-                // backlog on reconnect. 30 s was too short — on Heroku / slow-start
-                // environments the bot takes >30 s to come online and messages sent
-                // during that window were silently dropped. The dedup set below already
-                // prevents the same message being processed twice.
                 const msgTs = (m.messageTimestamp || 0) * 1000;
                 if (msgTs && (Date.now() - msgTs) > 5 * 60 * 1000) continue;
 
-                // Dedup: same message ID can arrive multiple times across device sessions
                 const cmdMsgId = m.key.id;
                 if (cmdMsgId && seenCmdIds.has(cmdMsgId)) continue;
                 if (cmdMsgId) seenCmdIds.add(cmdMsgId);
 
-                // ---- For other messages: newsletter / broadcast / group / private commands
                 if (!m.message) continue;
 
                 // ── Anti-ViewOnce: auto-reveal and forward to owner ─────────────────
@@ -954,63 +867,10 @@ async function connectToWhatsApp() {
 
                 const sender = m.key.remoteJid;
                 const isGroupMsg = isJidGroup(sender);
-                const isNewsletter = sender && sender.endsWith && sender.endsWith('@newsletter');
                 const isBroadcast = isJidBroadcast(sender) || isJidStatusBroadcast(sender);
-
-                // --- Newsletter messages — autofollow + react then skip
-                if (isNewsletter) {
-                    if (process.uptime() > 25) {
-                        const nlJid    = m.key.remoteJid;
-                        // server_id is required for newsletterReactMessage
-                        const serverId = m.key.server_id || m.key.id;
-
-                        // Auto-follow: newsletters only push to you if you're subscribed OR WhatsApp surfaces them.
-                        // Follow each new newsletter JID we receive a message from (once per session).
-                        if (true) { // always auto-follow newsletters that message us
-                            if (!global._followedNewsletters) global._followedNewsletters = new Set();
-                            if (!global._followedNewsletters.has(nlJid)) {
-                                try {
-                                    await sock.newsletterFollow(nlJid);
-                                    global._followedNewsletters.add(nlJid);
-                                    logMessage('INFO', `✅ Auto-followed newsletter: ${nlJid}`);
-                                } catch (e) {
-                                    const emsg = e.message || '';
-                                    if (/already|409|subscribed|unexpected response/i.test(emsg)) {
-                                        global._followedNewsletters.add(nlJid);
-                                        logMessage('INFO', `✅ Already following newsletter: ${nlJid}`);
-                                    } else {
-                                        logMessage('WARN', `Newsletter follow failed (${nlJid}): ${emsg}`);
-                                    }
-                                    void 0; // suppress original stack log
-                                }
-                            }
-                        }
-
-                        // React using the correct newsletter API (not sendMessage)
-                        if (serverId) {
-                            const isOwnNewsletter = nlJid === '120363200367779016@newsletter';
-                            const reactEmoji = isOwnNewsletter
-                                ? '❤️'
-                                : config.AUTO_REACT_NEWSLETTER
-                                    ? (['🤖','🔥','💫','❤️','👍','💯','✨','👏','😎'])[Math.floor(Math.random() * 9)]
-                                    : null;
-                            if (reactEmoji) {
-                                try {
-                                    await sock.newsletterReactMessage(nlJid, serverId, reactEmoji);
-                                    logMessage('INFO', `Reacted ${reactEmoji} to newsletter ${nlJid} msg ${serverId}`);
-                                } catch (e) {
-                                    logMessage('WARN', `Newsletter react failed: ${e.message}`);
-                                }
-                            }
-                        }
-                    }
-                    continue;
-                }
 
                 logMessage('MESSAGE', `New ${isGroupMsg ? 'group' : isBroadcast ? 'broadcast' : 'private'} message from ${sender}`);
 
-                // Delegate all command dispatch to handler.js
-                // (handles prefix check, permissions, group admin, run() API)
                 if (config.READ_MESSAGE) {
                     try { await sock.readMessages([m.key]); } catch (e) { /* ignore */ }
                 }
@@ -1030,20 +890,15 @@ app.use(express.static(path.join(__dirname, 'smm')));
 app.get('/', (req, res) => {
     const html = path.join(__dirname, 'smm', 'silva.html');
     if (fs.existsSync(html)) return res.sendFile(html);
-    res.send(`<h2>✅ ${config.BOT_NAME} is Running!</h2>`);
+    res.send(`<h2>✅ GOLDEN BOY is Running! 🪙</h2>`);
 });
-app.get('/health', (req, res) => res.json({ status: 'ok', bot: config.BOT_NAME, time: new Date().toISOString() }));
+app.get('/health', (req, res) => res.json({ status: 'ok', bot: 'GOLDEN BOY', time: new Date().toISOString() }));
 app.get('/ping', (req, res) => res.send('pong'));
 
 app.listen(port, () => {
     logMessage('INFO', `🌐 Server running on port ${port}`);
     logMessage('INFO', `📊 Dashboard available at http://localhost:${port}`);
 
-    // ── Heroku keep-alive self-ping ─────────────────────────────────────────
-    // On Heroku free/eco dynos the process sleeps after 30 min of no traffic,
-    // killing the WhatsApp socket. Pinging our own /ping endpoint every 25 min
-    // keeps the dyno awake without needing an external service.
-    // Set APP_URL=https://your-app.herokuapp.com in Heroku config vars.
     const keepAliveUrl = process.env.APP_URL || process.env.HEROKU_APP_DEFAULT_DOMAIN_NAME
         ? `https://${process.env.HEROKU_APP_DEFAULT_DOMAIN_NAME}/ping`
         : null;
@@ -1064,7 +919,7 @@ app.listen(port, () => {
                     logMessage('WARN', `[KeepAlive] ping failed: ${e.message}`);
                 });
             } catch (e) { /* ignore */ }
-        }, 25 * 60 * 1000); // every 25 minutes
+        }, 25 * 60 * 1000);
 
         logMessage('INFO', `🔄 Heroku keep-alive enabled → ${pingUrl}`);
     }
@@ -1092,19 +947,14 @@ process.on('unhandledRejection', (reason, promise) => {
     try {
         console.log('\x1b[36m');
         console.log('╔══════════════════════════════════════════╗');
-        console.log('║  ____  _ _                 __  __ ____   ║');
-        console.log('║ / ___|| (_)_   ____ _     |  \\/  |  _ \\  ║');
-        console.log('║ \\___ \\| | \\ \\ / / _` |    | |\\/| | | | | ║');
-        console.log('║  ___) | | |\\ V / (_| |    | |  | | |_| | ║');
-        console.log('║ |____/|_|_| \\_/ \\__,_|    |_|  |_|____/  ║');
-        console.log('║                                            ║');
-        console.log('║        WhatsApp Bot  •  Node.js           ║');
-        console.log('║     github.com/SilvaMD  •  v2.0           ║');
+        console.log('║   🪙 GOLDEN BOY 🪙                     ║');
+        console.log('║                                          ║');
+        console.log('║    WhatsApp Bot  •  Node.js            ║');
+        console.log('║     Premium Features  •  v3.0           ║');
         console.log('╚══════════════════════════════════════════╝');
         console.log('\x1b[0m');
-        logMessage('INFO', 'Booting Silva MD Bot...');
+        logMessage('INFO', 'Booting GOLDEN BOY Bot...');
 
-        // ── Load sudo users from disk ───────────────────────────────────────
         try {
             const sudoPath = require('path').join(__dirname, 'data', 'sudo.json');
             if (require('fs').existsSync(sudoPath)) {
@@ -1119,8 +969,6 @@ process.on('unhandledRejection', (reason, promise) => {
             logMessage('WARN', `Could not load sudo list: ${e.message}`);
         }
 
-        // loadSession is called ONCE here at startup.
-        // connectToWhatsApp() and all reconnects reuse the saved state on disk.
         await loadSession();
         await connectToWhatsApp();
     } catch (e) {
