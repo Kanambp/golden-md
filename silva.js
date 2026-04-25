@@ -509,6 +509,10 @@ async function connectToWhatsApp() {
                     // ⏱️ Wait enough time for WhatsApp to register the bot
                     await new Promise(resolve => setTimeout(resolve, 8000));
 
+                    if (sock.ws.readyState !== 1) {
+            logMessage('WARN', '⚠️ Connection not ready, waiting...');
+            await new Promise(resolve => setTimeout(resolve, 5000));
+                    }
                     try {
                         const groupWelcome = [
                             `╔═══════════════════════════════════╗`,
