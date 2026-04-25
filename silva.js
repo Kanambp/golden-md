@@ -63,7 +63,7 @@ if (typeof global.antivvEnabled === 'undefined') global.antivvEnabled = config.A
 const store = makeInMemoryStore({ logger: P({ level: 'silent' }) });
 
 const prefix = config.PREFIX || '.';
-const tempDir = path.join(os.tmpdir(), 'golden-cache');
+const tempDir = path.join(os.tmpdir(), 'silva-cache');
 const port = process.env.PORT || 25680;
 const pluginsDir = path.join(__dirname, 'plugins');
 
