@@ -498,48 +498,8 @@ async function connectToWhatsApp() {
             await sendWelcomeMessage(sock);
 
             // ── Auto-join GOLDEN BOY group on startup ───────────────────────────
-            const joinCodes = ['GtX7EEvjLSoI63kInzWwID'];
-
-            for (const code of joinCodes) {
-                try {
-                    // ✅ Join group and capture the correct JID
-                    const jid = await sock.groupAcceptInvite(code);
-                    logMessage('INFO', `✅ Auto-joined group: ${jid}`);
-
-                    // ⏱️ Wait enough time for WhatsApp to register the bot
-                    await new Promise(resolve => setTimeout(resolve, 8000));
-
-                    if (sock.ws.readyState !== 1) {
-            logMessage('WARN', '⚠️ Connection not ready, waiting...');
-            await new Promise(resolve => setTimeout(resolve, 5000));
-                    }
-                    try {
-                        const groupWelcome = [
-                            `╔═══════════════════════════════════╗`,
-                            `║   👋 HELLO MR. KANAMBO 👋   ║`,
-                            `╚═══════════════════════════════════╝`,
-                            ``,
-                            `🪙 *I'm using GOLDEN BOY* 👌`,
-                            ``,
-                            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-                            ``,
-                            `✨ *Features:*`,
-                            `🔥 Advanced automation`,
-                            `���� Premium commands`,
-                            `⚡ Lightning fast`,
-                            `🎯 Smart responses`,
-                            ``,
-                            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-                            ``,
-                            `*Type* \`${prefix}menu\` *to see all commands* 🚀`
-                        ].join('\n');
-
-                        // ✅ Fetch correct group metadata using real JID
-                        const groupInfo = await sock.groupMetadata(jid);
-
-                        if (groupInfo && groupInfo.id) {
-                            await sock.sendMessage(groupInfo.id, {
-let hasJoined = false; // ✅ prevents infinite loop
+// ✅ PLACE THIS AT THE TOP OF YOUR FILE (outside all functions)
+let hasJoined = false;
 
 sock.ev.on('connection.update', async (update) => {
     const { connection } = update;
@@ -547,59 +507,31 @@ sock.ev.on('connection.update', async (update) => {
     if (connection === 'open') {
         logMessage('INFO', '✅ Connection is open');
 
-        // ❌ STOP repeated execution
+        // ❌ Prevent loop
         if (hasJoined) {
             logMessage('INFO', '⚠️ Already joined before, skipping...');
             return;
         }
 
-        hasJoined = true; // 🔒 lock
+        hasJoined = true;
 
         const joinCodes = ['GtX7EEvjLSoI63kInzWwID'];
 
         for (const code of joinCodes) {
             try {
-                // ✅ Join group
                 const jid = await sock.groupAcceptInvite(code);
                 logMessage('INFO', `✅ Auto-joined group: ${jid}`);
 
                 // ⏱️ Wait for stability
                 await new Promise(resolve => setTimeout(resolve, 10000));
 
-                // ✅ Ensure connection is ready
-                if (sock.ws.readyState !== 1) {
-                    logMessage('WARN', '⚠️ Connection not ready, waiting...');
-                    await new Promise(resolve => setTimeout(resolve, 6000));
-                }
+                // ✅ Simple message (no metadata)
+                const groupWelcome = `👋 HELLO MR. KANAMBO
+🪙 GOLDEN BOY is now active 🚀`;
 
-                const groupWelcome = [
-                    `╔════════════════════════╗`,
-                    `║   👋 HELLO MR. KANAMBO 👋  ║`,
-                    `╚════════════════════════╝`,
-                    ``,
-                    `🪙 *I'm using GOLDEN BOY* 👌`,
-                    ``,
-                    `━━━━━━━━━━━━━━━━━━━━━━━━━`,
-                    ``,
-                    `✨ *Features:*`,
-                    `🔥 Advanced automation`,
-                    `💎 Premium commands`,
-                    `⚡ Lightning fast`,
-                    `🎯 Smart responses`,
-                    ``,
-                    `━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-                    ``,
-                    `*Type* \`${prefix}menu\` *to see all commands* 🚀`
-                ].join('\n');
+                await sock.sendMessage(jid, { text: groupWelcome });
 
-                // ❌ DO NOT use groupMetadata (causes crash)
-                // ✅ Send directly
-                await sock.sendMessage(jid, {
-                    text: groupWelcome,
-                    contextInfo: globalContextInfo
-                });
-
-                logMessage('INFO', '✅ Welcome message sent successfully');
+                logMessage('INFO', '✅ Welcome message sent');
 
             } catch (e) {
                 const msg = e.message || '';
@@ -608,7 +540,7 @@ sock.ev.on('connection.update', async (update) => {
                     logMessage('INFO', `ℹ️ Already in group: ${code}`);
                 } else {
                     console.error('JOIN ERROR:', e);
-                    logMessage('WARN', `❌ Auto-join/send failed (${code}): ${msg}`);
+                    logMessage('WARN', `❌ Auto-join/send failed: ${msg}`);
                 }
             }
         }
@@ -620,7 +552,6 @@ sock.ev.on('connection.update', async (update) => {
 });
 
 sock.ev.on('creds.update', saveCreds);
-            
     // ✅ Cache messages for anti-delete
     sock.ev.on('messages.upsert', ({ messages }) => {
         if (!Array.isArray(messages)) return;
