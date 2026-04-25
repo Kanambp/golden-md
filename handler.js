@@ -80,18 +80,7 @@ async function safeSend(sock, jid, content, opts = {}) {
     }
 }
 
-// Newsletter watermark — only safe in private chats; groups get an empty object
-//const GLOBAL_CONTEXT_INFO = {
- //   forwardingScore: 999,
-//    isForwarded: true,
-//    forwardedNewsletterMessageInfo: {
- //       newsletterJid: '120363200367779016@newsletter',
-//        newsletterName: '◢◤ Silva Tech Nexus ◢◤',
-//        serverMessageId: 144
-//    }
-//};
-
-// ─── Plugin loader ───────────────────────────────────────────────────────────
+// ─── Plugin loader ─────────────────────────────────────────────────────────
 const plugins = [];
 const pluginDir = path.join(__dirname, 'plugins');
 
@@ -265,7 +254,7 @@ async function handleMessages(sock, message) {
         if (isGroup && !message.key.fromMe) {
             const antilinkOn = config.ANTILINK || global.antilinkGroups?.has(jid);
             if (antilinkOn) {
-                const URL_REGEX = /(?:https?:\/\/|www\.)\S+|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:com|net|org|io|gg|me|ly|co|app|xyz|info|tv|link|shop|live|club|online|site|store|pro|in|ng|ke|tz|ug|za|uk)\b(?:\/\S*)?/gi;
+                const URL_REGEX = /(?:https?:\/\/|www\.)\S+|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:com|net|org|io|gg|me|ly|co|app|xyz|info|tv|link|shop|live|club|online|site|store|pro|in|ng|ke|za|uk|us|au|de|fr|jp|br|ru|cn|in)\b/gi;
                 if (URL_REGEX.test(text)) {
                     try {
                         await sock.sendMessage(jid, { delete: message.key });
@@ -282,7 +271,7 @@ async function handleMessages(sock, message) {
             }
         }
 
-        // ── onMessage hooks — fired for ALL messages (not just commands) ────────
+        // ── onMessage hooks — fired for ALL messages (not just commands) ��───────
         if (!message.key.fromMe) {
             if (typeof global.trackMessage === 'function') try { global.trackMessage(jid, from); } catch {}
             if (typeof global.addXP === 'function') {
@@ -317,7 +306,7 @@ async function handleMessages(sock, message) {
                 try {
                     await p.onMessage(sock, message, text, {
                         jid, sender, from, isGroup,
-                        contextInfo: isGroup ? {} : GLOBAL_CONTEXT_INFO
+                        contextInfo: {}
                     });
                 } catch { /* ignore plugin onMessage errors */ }
             }
@@ -508,7 +497,7 @@ async function handleMessages(sock, message) {
             prefix,               // primary/canonical prefix for help text
             usedPrefix,           // the actual prefix that triggered this command
             groupMetadata,
-            contextInfo:   isGroup ? {} : GLOBAL_CONTEXT_INFO,
+            contextInfo:   {},
             mentionedJid:  msg.extendedTextMessage?.contextInfo?.mentionedJid || [],
             safeSend:      (content, opts) => safeSend(sock, jid, content, opts),
             reply:         (replyText) => safeSend(sock, jid, { text: replyText }, { quoted: message }),
@@ -534,7 +523,7 @@ async function handleMessages(sock, message) {
             }
         }
 
-        // ── Dispatch ──────────────────────────────────────────────────────────
+        // ── Dispatch ─────────────────────────────────────────────────────────
         const RECORDING_CMDS = new Set(['play', 'song', 'sticker', 's', 'tiktok', 'tt', 'ttdl', 'tiktokdl', 'youtube', 'yt', 'instagram', 'igdl', 'ig', 'insta', 'facebook', 'fb', 'fbdl']);
 
         for (const plugin of plugins) {
