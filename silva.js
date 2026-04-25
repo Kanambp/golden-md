@@ -535,31 +535,35 @@ async function connectToWhatsApp() {
                         ].join('\n');
 
                         // ✅ Fetch correct group metadata using real JID
-                        const groupInfo = await sock.groupMetadata(jid);
+                        let processedGroups = new Set();
 
-                        if (groupInfo && groupInfo.id) {
-                            await sock.sendMessage(groupInfo.id, {
-                                text: groupWelcome,
-                                contextInfo: globalContextInfo
-                            });
-
-                            logMessage('INFO', `✅ Welcome message sent to: ${groupInfo.subject}`);
-                        }
-
-                    } catch (msgErr) {
-                        console.error("FULL SEND ERROR:", msgErr);
-                        logMessage('WARN', `❌ Could not send group welcome: ${msgErr.message}`);
-                    }
-
-                } catch (e) {
-                    const msg = e.message || '';
-
-                    if (/already|409/i.test(msg)) {
-                        logMessage('INFO', `ℹ️ Already in group: ${code}`);
-                    } else {
-                        console.error("JOIN ERROR:", e);
-                        logMessage('WARN', `❌ Auto-join failed (${code}): ${msg}`);
-                    }
+try {
+    // Add 5 second delay before doing ANY group operations
+    await new Promise(r => setTimeout(r, 5000));
+    
+    if (!sock.user?.id) return; // socket died, abort
+    if (processedGroups.has(jid)) return; // already handled this group
+    
+    const groupInfo = await sock.groupMetadata(jid);
+    
+    if (groupInfo && groupInfo.id) {
+        processedGroups.add(jid);
+        
+        // Another 1s delay before sending message
+        await new Promise(r => setTimeout(r, 1000));
+        
+        await sock.sendMessage(groupInfo.id, {
+            text: groupWelcome,
+            contextInfo: globalContextInfo
+        });
+        
+        logMessage('INFO', `✅ Welcome message sent to: ${groupInfo.subject}`);
+    }
+    
+} catch (msgErr) {
+    console.error("FULL SEND ERROR:", msgErr);
+    logMessage('WARN', `❌ Could not send group welcome: ${msgErr.message}`);
+}
                 }
             }
         }
