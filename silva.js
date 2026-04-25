@@ -88,7 +88,7 @@ async function loadSession() {
         if (sid && hasTilde) {
             if (!fs.existsSync(credsPath)) {
                 const [header, b64data] = sid.split('~');
-                if (header !== "Golden" || !b64data) {
+                if (header !== "Silva" || !b64data) {
                     logMessage('WARN', "⚠️ SESSION_ID format invalid — falling back to QR scan");
                     return;
                 }
