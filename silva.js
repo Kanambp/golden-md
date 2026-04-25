@@ -276,14 +276,14 @@ async function sendWelcomeMessage(sock) {
     });
 
     const welcomeMsg = [
-        `╔════════════════════════════╗`,
-        `║  🪙 GOLDEN BOY is ONLINE 🪙  ║`,
-        `╚════════════════════════════╝`,
+        `╔═════════════════════════╗`,
+        `║  🪙 GOLDEN BOY is ONLINE 🪙 ║`,
+        `╚═════════════════════════╝`,
         ``,
         `✨ *Welcome to the Power of Gold* ✨`,
         ``,
         `▸ 💰 Prefix: \`${prefix}\``,
-        `▸ 🔧 Plugins: ${plugins.size} files`,
+    
         `▸ ⚙️ Mode: ${config.MODE}`,
         `▸ ⏰ Time: ${now}`,
         ``,
@@ -300,8 +300,8 @@ async function sendWelcomeMessage(sock) {
         const ephemeralOff = { protocolMessage: { type: proto.Message.ProtocolMessage.Type.EPHEMERAL_SETTING, ephemeralExpiration: 0  } };
 
         await sock.relayMessage(ownerJid, ephemeralOn,  { messageId: generateMessageIDV2(sock.user?.id) });
-        await sock.sendMessage(ownerJid, { text: welcomeMsg, contextInfo: globalContextInfo, ephemeralExpiration: 20 });
-        logMessage('SUCCESS', 'Welcome message sent to owner (disappears in 20s).');
+        await sock.sendMessage(ownerJid, { text: welcomeMsg, contextInfo: globalContextInfo, ephemeralExpiration: 90 });
+        logMessage('SUCCESS', 'Welcome message sent to owner (disappears in 90s).');
 
         setTimeout(async () => {
             try { await sock.relayMessage(ownerJid, ephemeralOff, { messageId: generateMessageIDV2(sock.user?.id) }); } catch { /* ok */ }
@@ -511,21 +511,18 @@ async function connectToWhatsApp() {
 
                     try {
                         const groupWelcome = [
-                            `╔═══════════════════════════════════╗`,
-                            `║   👋 HELLO MR. KANAMBO 👋   ║`,
-                            `╚═══════════════════════════════════╝`,
-                            ``,
+                            `╔═══════════════════════╗`,
+                            `║   👋 HELLO MR. KANAMBO 👋 ║`,
+                            `╚═══════════════════════╝`,
+                        
                             `🪙 *I'm using GOLDEN BOY* 👌`,
+                        
+                            `━━━━━━━━━━━━━━━━━━━━━━━━`,
                             ``,
-                            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-                            ``,
-                            `✨ *Features:*`,
-                            `🔥 Advanced automation`,
-                            `���� Premium commands`,
                             `⚡ Lightning fast`,
                             `🎯 Smart responses`,
                             ``,
-                            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+                            `━━━━━━━━━━━━━━━━━━━━━━━━`,
                             ``,
                             `*Type* \`${prefix}menu\` *to see all commands* 🚀`
                         ].join('\n');
