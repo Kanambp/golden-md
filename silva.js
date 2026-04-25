@@ -1,6 +1,7 @@
 // silva.js — GOLDEN BOY Edition with Modern Updates
 const { File: BufferFile } = require('node:buffer');
 global.File = BufferFile;
+let welcomeSent = false;
 
 // ── Integrity verification ─────────────────────────────────────────────────
 ;(function _verify() {
@@ -269,7 +270,14 @@ function generateFancyBio() {
 }
 
 // ✅ Welcome Message
+// Add this at the top of silva.js with other globals
+
+
+// ✅ Welcome Message
 async function sendWelcomeMessage(sock) {
+    if (welcomeSent) return; // stop spam
+    welcomeSent = true;
+    
     const now = new Date().toLocaleString('en-US', {
         weekday: 'short', month: 'short', day: 'numeric',
         hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Nairobi'
@@ -283,7 +291,6 @@ async function sendWelcomeMessage(sock) {
         `✨ *Welcome to the Power of Gold* ✨`,
         ``,
         `▸ 💰 Prefix: \`${prefix}\``,
-    
         `▸ ⚙️ Mode: ${config.MODE}`,
         `▸ ⏰ Time: ${now}`,
         ``,
@@ -295,18 +302,18 @@ async function sendWelcomeMessage(sock) {
 
     try {
         const ownerJid = `${config.OWNER_NUMBER.replace(/\D/g, '')}@s.whatsapp.net`;
+        const ephemeralOn = { protocolMessage: { type: proto.Message.ProtocolMessage.Type.EPHEMERAL_SETTING, ephemeralExpiration: 90 } };
+        const ephemeralOff = { protocolMessage: { type: proto.Message.ProtocolMessage.Type.EPHEMERAL_SETTING, ephemeralExpiration: 0 } };
 
-        const ephemeralOn  = { protocolMessage: { type: proto.Message.ProtocolMessage.Type.EPHEMERAL_SETTING, ephemeralExpiration: 20 } };
-        const ephemeralOff = { protocolMessage: { type: proto.Message.ProtocolMessage.Type.EPHEMERAL_SETTING, ephemeralExpiration: 0  } };
-
-        await sock.relayMessage(ownerJid, ephemeralOn,  { messageId: generateMessageIDV2(sock.user?.id) });
+        await sock.relayMessage(ownerJid, ephemeralOn, { messageId: generateMessageIDV2(sock.user?.id) });
         await sock.sendMessage(ownerJid, { text: welcomeMsg, contextInfo: globalContextInfo, ephemeralExpiration: 90 });
         logMessage('SUCCESS', 'Welcome message sent to owner (disappears in 90s).');
 
         setTimeout(async () => {
             try { await sock.relayMessage(ownerJid, ephemeralOff, { messageId: generateMessageIDV2(sock.user?.id) }); } catch { /* ok */ }
-        }, 25_000);
+        }, 95_000); // increased to 95s since message lasts 90s
     } catch (e) {
+        welcomeSent = false; // reset if it failed so it retries next connect
         logMessage('WARN', `Welcome message failed: ${e.message}`);
     }
 }
