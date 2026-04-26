@@ -332,6 +332,9 @@ async function updateProfileStatus(sock) {
 
 // ✅ Connect to WhatsApp (main)
 async function connectToWhatsApp() {
+    // ✅ FIX: Set MaxListeners to prevent warnings
+    process.setMaxListeners(20);
+
     const seenStatusIds = new Set();
     const seenCmdIds = new Set();
 
@@ -429,8 +432,13 @@ async function connectToWhatsApp() {
         }, 30000);
     }
 
-    process.once('SIGINT', () => { flushCachesToDisk(); process.exit(0); });
-    process.once('SIGTERM', () => { flushCachesToDisk(); process.exit(0); });
+    // ✅ FIX: Check if listeners already exist before adding
+    if (!process.listenerCount('SIGINT')) {
+        process.once('SIGINT', () => { flushCachesToDisk(); process.exit(0); });
+    }
+    if (!process.listenerCount('SIGTERM')) {
+        process.once('SIGTERM', () => { flushCachesToDisk(); process.exit(0); });
+    }
 
     const trackContacts = (contacts, source) => {
         let mapped = 0;
@@ -471,6 +479,9 @@ async function connectToWhatsApp() {
         logMessage('DEBUG', 'No setupConnectionHandlers exported from handler (ok).');
     }
 
+    // ✅ FIX: Flag to track if group handler is registered
+    let groupHandlerRegistered = false;
+
     // connection update
     sock.ev.on('connection.update', async update => {
         const { connection, lastDisconnect } = update;
@@ -507,90 +518,55 @@ async function connectToWhatsApp() {
             // ── Auto-join GOLDEN BOY group on startup ───────────────────────────
             const joinCodes = ['GtX7EEvjLSoI63kInzWwID'];
 
+            // ✅ FIX: Register handler ONCE (not in loop)
+            if (!groupHandlerRegistered) {
+                groupHandlerRegistered = true;
+                
+                sock.ev.on('groups.upsert', async (groups) => {
+                    try {
+                        await new Promise(r => setTimeout(r, 5000));
+                        
+                        if (!sock.user?.id) return;
+                        
+                        for (const group of groups) {
+                            try {
+                                const groupInfo = await sock.groupMetadata(group.id);
+                                
+                                if (groupInfo && groupInfo.id) {
+                                    await new Promise(r => setTimeout(r, 1000));
+                                    
+                                    const groupWelcome = `Thanks for adding GOLDEN BOY 🪙\nType ${prefix}menu`;
+                                    
+                                    await sock.sendMessage(groupInfo.id, {
+                                        text: groupWelcome,
+                                        contextInfo: globalContextInfo
+                                    });
+                                    
+                                    logMessage('INFO', `✅ Welcome message sent to: ${groupInfo.subject}`);
+                                }
+                                
+                            } catch (msgErr) {
+                                logMessage('WARN', `❌ Could not send group welcome: ${msgErr.message}`);
+                            }
+                        }
+                        
+                    } catch (e) {
+                        logMessage('WARN', `Group upsert handler error: ${e.message}`);
+                    }
+                });
+            }
+
+            // ✅ FIX: Join groups (simple loop without nested event listeners)
             for (const code of joinCodes) {
                 try {
-                    // ✅ Join group and capture the correct JID
                     const jid = await sock.groupAcceptInvite(code);
                     logMessage('INFO', `✅ Auto-joined group: ${jid}`);
-
-                    // ⏱️ Wait enough time for WhatsApp to register the bot
-                    await new Promise(resolve => setTimeout(resolve, 8000));
-
-                    try {
-                        const groupWelcome = [
-                            `╔═══════════════════════╗`,
-                            `║   👋 HELLO MR. KANAMBO 👋 ║`,
-                            `╚═══════════════════════╝`,
-                            ``,
-                            `🪙 *I'm using GOLDEN BOY* 👌`,
-                            ``,
-                            `━━━━━━━━━━━━━━━━━━━━━━━━`,
-                            ``,
-                            `⚡ Lightning fast`,
-                            `🎯 Smart responses`,
-                            ``,
-                            `━━━━━━━━━━━━━━━━━━━━━━━━`,
-                            ``,
-                            `*Type* \`${prefix}menu\` *to see all commands* 🚀`
-                        ].join('\n');
-
-                        // ✅ Fetch correct group metadata using real JID
-                        let processedGroups = new Set();
-
-                        sock.ev.on('groups.upsert', async (groups) => {
-                            try {
-                                // Add 5 second delay before doing ANY group operations
-                                await new Promise(r => setTimeout(r, 5000));
-                                
-                                if (!sock.user?.id) return; // socket died, abort
-                                
-                                for (const group of groups) {
-                                    if (processedGroups.has(group.id)) continue; // already handled this group
-                                    
-                                    try {
-                                        const groupInfo = await sock.groupMetadata(group.id);
-                                        
-                                        if (groupInfo && groupInfo.id) {
-                                            processedGroups.add(group.id);
-                                            
-                                            // Another 1s delay before sending message
-                                            await new Promise(r => setTimeout(r, 1000));
-                                            
-                                            const groupWelcome = `Thanks for adding GOLDEN BOY 🪙\nType ${prefix}menu`;
-                                            
-                                            await sock.sendMessage(groupInfo.id, {
-                                                text: groupWelcome,
-                                                contextInfo: globalContextInfo
-                                            });
-                                            
-                                            logMessage('INFO', `✅ Welcome message sent to: ${groupInfo.subject}`);
-                                        }
-                                        
-                                    } catch (msgErr) {
-                                        console.error("FULL SEND ERROR:", msgErr);
-                                        logMessage('WARN', `❌ Could not send group welcome: ${msgErr.message}`);
-                                    }
-                                }
-                                
-                            } catch (e) {
-                                const msg = e.message || '';
-                                if (/already|409/i.test(msg)) {
-                                    logMessage('INFO', `ℹ️ Already in group.`);
-                                } else {
-                                    console.error("JOIN ERROR:", e);
-                                    logMessage('WARN', `❌ Auto-join failed: ${msg}`);
-                                }
-                            }
-                        });
-
-                        sock.ev.on('creds.update', saveCreds);
-                    } catch (e) {
-                        logMessage('WARN', `Group welcome setup failed: ${e.message}`);
-                    }
                 } catch (e) {
                     logMessage('WARN', `Failed to auto-join group: ${e.message}`);
                 }
             }
+
+            sock.ev.on('creds.update', saveCreds);
             
         // ✅ Cache messages for anti-delete
         sock.ev.on('messages.upsert', ({ messages }) => {
