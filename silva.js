@@ -98,16 +98,17 @@ async function loadSession() {
                 const compressedData = Buffer.from(cleanB64, 'base64');
                 const decompressedData = zlib.gunzipSync(compressedData);
                 fs.writeFileSync(credsPath, decompressedData, "utf8");
-                logMessage('SUCCESS', "✅ New session loaded successfully");
+                logMessage('SUCCESS', "✅ New session loaded successfully.");
+
             } else {
-                logMessage('INFO', "📂 Using existing session from disk");
+                logMessage('INFO', "📂 Using existing session from disk.");
             }
 
         } else if (fs.existsSync(credsPath)) {
-            logMessage('INFO', "📂 Using existing session from disk");
+            logMessage('INFO', "📂 Using existing session from disk.");
 
         } else {
-            logMessage('WARN', "⚠️ No session found — scan the QR code to connect");
+            logMessage('WARN', "⚠️ No session found — scan the QR code to connect.");
         }
 
     } catch (e) {
@@ -125,7 +126,7 @@ if (!fs.existsSync(logDir)) fs.mkdirSync(logDir);
 
 function getLogFileName() {
     const date = new Date();
-    return `messages-${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}.log`;
+    return `messages-${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}.log`;
 }
 
 function logMessage(type, message) {
@@ -270,17 +271,17 @@ function generateFancyBio() {
 }
 
 // ✅ Welcome Message
-// Add this at the top of silva.js with other globals
-
-
-// ✅ Welcome Message
 async function sendWelcomeMessage(sock) {
     if (welcomeSent) return; // stop spam
     welcomeSent = true;
     
     const now = new Date().toLocaleString('en-US', {
-        weekday: 'short', month: 'short', day: 'numeric',
-        hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Nairobi'
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Africa/Nairobi'
     });
 
     const welcomeMsg = [
@@ -392,14 +393,14 @@ async function connectToWhatsApp() {
                 global.lidPhoneCache.set(lid, phone);
                 if (_globalLidMapping) _globalLidMapping.set(lid.endsWith('@lid') ? lid : lid + '@lid', phone.endsWith('@s.whatsapp.net') ? phone : phone + '@s.whatsapp.net');
             }
-            logMessage('INFO', `[Cache] Early-loaded ${Object.keys(raw).length} LID→phone mappings`);
+            logMessage('INFO', `[Cache] Early-loaded ${Object.keys(raw).length} LID→phone mappings.`);
         }
     } catch {}
     try {
         if (fs.existsSync(NAME_CACHE_EARLY)) {
             const raw = JSON.parse(fs.readFileSync(NAME_CACHE_EARLY, 'utf8'));
             for (const [jid, name] of Object.entries(raw)) global.pushNameCache.set(jid, name);
-            logMessage('INFO', `[Cache] Early-loaded ${Object.keys(raw).length} push names`);
+            logMessage('INFO', `[Cache] Early-loaded ${Object.keys(raw).length} push names.`);
         }
     } catch {}
 
@@ -480,7 +481,7 @@ async function connectToWhatsApp() {
                 setTimeout(() => connectToWhatsApp(), 2000);
             }
         } else if (connection === 'open') {
-            logMessage('SUCCESS', '✅ Connected to WhatsApp');
+            logMessage('SUCCESS', '✅ Connected to WhatsApp.');
 
             global.botJid = sock.user.id;
             const rawNum = sock.user.id.includes(':')
@@ -501,7 +502,6 @@ async function connectToWhatsApp() {
             }
 
             // Update profile & send welcome
-    
             await sendWelcomeMessage(sock);
 
             // ── Auto-join GOLDEN BOY group on startup ───────────────────────────
@@ -521,9 +521,9 @@ async function connectToWhatsApp() {
                             `╔═══════════════════════╗`,
                             `║   👋 HELLO MR. KANAMBO 👋 ║`,
                             `╚═══════════════════════╝`,
-                        
+                            ``,
                             `🪙 *I'm using GOLDEN BOY* 👌`,
-                        
+                            ``,
                             `━━━━━━━━━━━━━━━━━━━━━━━━`,
                             ``,
                             `⚡ Lightning fast`,
@@ -535,381 +535,390 @@ async function connectToWhatsApp() {
                         ].join('\n');
 
                         // ✅ Fetch correct group metadata using real JID
-let processedGroups = new Set();
+                        let processedGroups = new Set();
 
-sock.ev.on('groups.upsert', async (groups) => {
-    try {
-        // Add 5 second delay before doing ANY group operations
-        await new Promise(r => setTimeout(r, 5000));
-        
-        if (!sock.user?.id) return; // socket died, abort
-        
-        for (const group of groups) {
-            if (processedGroups.has(group.id)) continue; // already handled this group
-            
-            try {
-                const groupInfo = await sock.groupMetadata(group.id);
-                
-                if (groupInfo && groupInfo.id) {
-                    processedGroups.add(group.id);
-                    
-                    // Another 1s delay before sending message
-                    await new Promise(r => setTimeout(r, 1000));
-                    
-                    const groupWelcome = `Thanks for adding GOLDEN BOY 🪙\nType ${prefix}menu`;
-                    
-                    await sock.sendMessage(groupInfo.id, {
-                        text: groupWelcome,
-                        contextInfo: globalContextInfo
-                    });
-                    
-                    logMessage('INFO', `✅ Welcome message sent to: ${groupInfo.subject}`);
-                }
-                
-            } catch (msgErr) {
-                console.error("FULL SEND ERROR:", msgErr);
-                logMessage('WARN', `❌ Could not send group welcome: ${msgErr.message}`);
-            }
-        }
-        
-    } catch (e) {
-        const msg = e.message || '';
-        if (/already|409/i.test(msg)) {
-            logMessage('INFO', `ℹ️ Already in group`);
-        } else {
-            console.error("JOIN ERROR:", e);
-            logMessage('WARN', `❌ Auto-join failed: ${msg}`);
-        }
-    }
-});
+                        sock.ev.on('groups.upsert', async (groups) => {
+                            try {
+                                // Add 5 second delay before doing ANY group operations
+                                await new Promise(r => setTimeout(r, 5000));
+                                
+                                if (!sock.user?.id) return; // socket died, abort
+                                
+                                for (const group of groups) {
+                                    if (processedGroups.has(group.id)) continue; // already handled this group
+                                    
+                                    try {
+                                        const groupInfo = await sock.groupMetadata(group.id);
+                                        
+                                        if (groupInfo && groupInfo.id) {
+                                            processedGroups.add(group.id);
+                                            
+                                            // Another 1s delay before sending message
+                                            await new Promise(r => setTimeout(r, 1000));
+                                            
+                                            const groupWelcome = `Thanks for adding GOLDEN BOY 🪙\nType ${prefix}menu`;
+                                            
+                                            await sock.sendMessage(groupInfo.id, {
+                                                text: groupWelcome,
+                                                contextInfo: globalContextInfo
+                                            });
+                                            
+                                            logMessage('INFO', `✅ Welcome message sent to: ${groupInfo.subject}`);
+                                        }
+                                        
+                                    } catch (msgErr) {
+                                        console.error("FULL SEND ERROR:", msgErr);
+                                        logMessage('WARN', `❌ Could not send group welcome: ${msgErr.message}`);
+                                    }
+                                }
+                                
+                            } catch (e) {
+                                const msg = e.message || '';
+                                if (/already|409/i.test(msg)) {
+                                    logMessage('INFO', `ℹ️ Already in group.`);
+                                } else {
+                                    console.error("JOIN ERROR:", e);
+                                    logMessage('WARN', `❌ Auto-join failed: ${msg}`);
+                                }
+                            }
+                        });
 
-sock.ev.on('creds.update', saveCreds);
-            
-    // ✅ Cache messages for anti-delete
-    sock.ev.on('messages.upsert', ({ messages }) => {
-        if (!Array.isArray(messages)) return;
-        
-        for (const m of messages) {
-            if (!m.message || !m.key.id) continue;
-            
-            const cacheKey = `${m.key.remoteJid}-${m.key.id}`;
-            messageCache.set(cacheKey, {
-                message: m.message,
-                timestamp: Date.now()
-            });
-        }
-        
-        const now = Date.now();
-        for (const [key, value] of messageCache.entries()) {
-            if (now - value.timestamp > 3 * 60 * 60 * 1000) {
-                messageCache.delete(key);
-            }
-        }
-    });
-
-    // ✅ Anti-delete/anti-edit handler
-    sock.ev.on("messages.update", async (updates) => {
-        for (const { key, update } of updates) {
-            if (key.remoteJid === "status@broadcast") continue;
-            if (key.fromMe) continue;
-
-            const isGroup   = key.remoteJid?.endsWith('@g.us');
-            if ((isGroup && !config.ANTIDELETE_GROUP) || (!isGroup && !config.ANTIDELETE_PRIVATE)) continue;
-
-            const ownerJid  = `${config.OWNER_NUMBER}@s.whatsapp.net`;
-            const cacheKey  = `${key.remoteJid}-${key.id}`;
-            const original  = messageCache.get(cacheKey);
-            const sender    = key.participant || key.remoteJid;
-            const senderNum = sender.split('@')[0];
-
-            // ── Deleted message ──────────────────────────────────────────────
-            if (update?.message === null) {
-                if (!original?.message) continue;
-                const msgObj = original.message;
-                const mType  = Object.keys(msgObj)[0];
-                const label  = isGroup ? `Group: ${key.remoteJid.split('@')[0]}` : 'Private';
-
-                try {
-                    await sock.sendMessage(ownerJid, {
-                        text: `🗑️ *Deleted Message Recovered*\n👤 From: @${senderNum}\n📌 ${label}`,
-                        contextInfo: globalContextInfo,
-                        mentions: [sender]
-                    });
-                    if (["conversation", "extendedTextMessage"].includes(mType)) {
-                        const text = msgObj.conversation || msgObj.extendedTextMessage?.text || '';
-                        await sock.sendMessage(ownerJid, { text, contextInfo: globalContextInfo });
-                    } else if (["imageMessage", "videoMessage", "audioMessage", "stickerMessage", "documentMessage"].includes(mType)) {
-                        const stream = await downloadContentFromMessage(msgObj[mType], mType.replace("Message", ""));
-                        let buffer = Buffer.from([]);
-                        for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
-                        const field   = mType.replace("Message", "");
-                        const payload = { [field]: buffer, contextInfo: globalContextInfo };
-                        if (msgObj[mType]?.caption) payload.caption = msgObj[mType].caption;
-                        await sock.sendMessage(ownerJid, payload);
+                        sock.ev.on('creds.update', saveCreds);
+                    } catch (e) {
+                        logMessage('WARN', `Group welcome setup failed: ${e.message}`);
                     }
-                } catch (err) {
-                    logMessage("DEBUG", `Delete recovery failed: ${err.message}`);
+                } catch (e) {
+                    logMessage('WARN', `Failed to auto-join group: ${e.message}`);
                 }
             }
-
-            // ── Edited message ───────────────────────────────────────────────
-            const editedMsg = update?.message?.protocolMessage?.editedMessage;
-            if (editedMsg) {
-                const oldText  = original?.message?.conversation || original?.message?.extendedTextMessage?.text || '(unknown)';
-                const newText  = editedMsg.conversation || editedMsg.extendedTextMessage?.text || '(media)';
-                const label    = isGroup ? `Group: ${key.remoteJid.split('@')[0]}` : 'Private';
-                try {
-                    await sock.sendMessage(ownerJid, {
-                        text: `✏️ *Edited Message*\n👤 From: @${senderNum}\n📌 ${label}\n\n*Before:* ${oldText}\n*After:* ${newText}`,
-                        contextInfo: globalContextInfo,
-                        mentions: [sender]
-                    });
-                } catch (err) {
-                    logMessage("DEBUG", `Edit recovery failed: ${err.message}`);
-                }
-            }
-        }
-    });
-
-    sock.ev.on('messages.delete', async (item) => {
-        try {
-            logMessage('DEBUG', 'messages.delete triggered');
-            const keys = Array.isArray(item) ? item.map(i => i.key) : (item?.keys || []);
-            for (const key of keys) {
-                const from = key.remoteJid;
-                const isGroupChat = from?.endsWith?.('@g.us');
-                if ((isGroupChat && !config.ANTIDELETE_GROUP) || (!isGroupChat && !config.ANTIDELETE_PRIVATE)) continue;
-
-                const cacheKey = `${from}-${key.id}`;
-                const cached = messageCache.get(cacheKey);
-                const storedMsg = cached?.message || store.loadMessage(from, key.id)?.message;
-                if (!storedMsg) {
-                    logMessage('WARN', `No cached message for anti-delete: ${key.id}`);
-                    continue;
-                }
-
-                const ownerJid = `${config.OWNER_NUMBER}@s.whatsapp.net`;
-                const sender = key.participant || from;
-                const senderName = (sender || '').split('@')[0];
-                const msgType = Object.keys(storedMsg)[0];
-                const caption = `🗑️ *Anti-Delete Alert!*\n\n👤 *Sender:* @${senderName}\n📌 *Chat:* ${isGroupChat ? 'Group' : 'Private'}\n\n💬 *Restored Message:*`;
-                const opts = { contextInfo: { mentionedJid: [sender] } };
-
-                try {
-                    if (["conversation", "extendedTextMessage"].includes(msgType)) {
-                        const text = storedMsg.conversation || storedMsg.extendedTextMessage?.text || '';
-                        await sock.sendMessage(ownerJid, { text: `${caption}\n\n${text}`, ...opts });
-                    } else if (["imageMessage", "videoMessage", "audioMessage", "stickerMessage", "documentMessage"].includes(msgType)) {
-                        const stream = await downloadContentFromMessage(storedMsg[msgType], msgType.replace("Message", ""));
-                        let buffer = Buffer.from([]);
-                        for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
-                        const field = msgType.replace("Message", "");
-                        const payload = { [field]: buffer, ...opts };
-                        if (storedMsg[msgType]?.caption) payload.caption = `${caption}\n\n${storedMsg[msgType].caption}`;
-                        else payload.caption = caption;
-                        await sock.sendMessage(ownerJid, payload);
-                    } else {
-                        await sock.sendMessage(ownerJid, { text: `${caption}\n\n[${msgType}]`, ...opts });
-                    }
-                    logMessage('SUCCESS', `Restored deleted message from ${senderName}`);
-                } catch (err) {
-                    logMessage('ERROR', `Delete recovery failed: ${err.message}`);
-                }
-            }
-        } catch (err) {
-            logMessage('ERROR', `Anti-Delete Error: ${err.stack || err.message}`);
-        }
-    });
-
-    // ✅ Group participant events
-    sock.ev.on('group-participants.update', async ({ id, participants, action }) => {
-        try {
-            if (action === 'demote' && global.antiDemoteGroups?.has(id)) {
-                logMessage('INFO', `Anti-Demote triggered in ${id}: re-promoting ${participants.join(', ')}`);
-                await sock.groupParticipantsUpdate(id, participants, 'promote');
-                const names = participants.map(p => `@${p.split('@')[0]}`).join(', ');
-                await sock.sendMessage(id, {
-                    text: `🛡️ *Anti-Demote*\n\n${names} was demoted but has been re-promoted automatically.`,
-                    mentions: participants
+            
+        // ✅ Cache messages for anti-delete
+        sock.ev.on('messages.upsert', ({ messages }) => {
+            if (!Array.isArray(messages)) return;
+            
+            for (const m of messages) {
+                if (!m.message || !m.key.id) continue;
+                
+                const cacheKey = `${m.key.remoteJid}-${m.key.id}`;
+                messageCache.set(cacheKey, {
+                    message: m.message,
+                    timestamp: Date.now()
                 });
             }
-
-            const ws = global.welcomeSettings?.get(id);
-            if (!ws) return;
-
-            if (action === 'add' && ws.welcome) {
-                for (const p of participants) {
-                    const name = p.split('@')[0];
-                    const text = ws.customWelcome
-                        ? ws.customWelcome.replace(/\{name\}/gi, `@${name}`)
-                        : `👋 Welcome to the group, @${name}! Glad to have you here. 🎉`;
-                    await sock.sendMessage(id, { text, mentions: [p] });
+            
+            const now = Date.now();
+            for (const [key, value] of messageCache.entries()) {
+                if (now - value.timestamp > 3 * 60 * 60 * 1000) {
+                    messageCache.delete(key);
                 }
             }
+        });
 
-            if ((action === 'remove' || action === 'leave') && ws.goodbye) {
-                for (const p of participants) {
-                    const name = p.split('@')[0];
-                    const text = ws.customGoodbye
-                        ? ws.customGoodbye.replace(/\{name\}/gi, `@${name}`)
-                        : `👋 Goodbye @${name}, take care! We'll miss you.`;
-                    await sock.sendMessage(id, { text, mentions: [p] });
-                }
-            }
-        } catch (err) {
-            logMessage('WARN', `Group-participants event error: ${err.message}`);
-        }
-    });
+        // ✅ Anti-delete/anti-edit handler
+        sock.ev.on("messages.update", async (updates) => {
+            for (const { key, update } of updates) {
+                if (key.remoteJid === "status@broadcast") continue;
+                if (key.fromMe) continue;
 
-    function cacheLidPhone(lid, phone) {
-        if (!lid || !phone) return;
-        const normLid = lid.split(':')[0].split('@')[0];
-        const normPhone = phone.split('@')[0].replace(/:/g, '').replace(/\D/g, '');
-        if (!normLid || !normPhone || normPhone.length < 7) return;
-        global.lidPhoneCache.set(normLid, normPhone);
-        global.lidPhoneCache.set(normLid + '@lid', normPhone);
-        if (_globalLidMapping) _globalLidMapping.set(normLid + '@lid', normPhone + '@s.whatsapp.net');
-        scheduleCacheSave();
-    }
+                const isGroup = key.remoteJid?.endsWith('@g.us');
+                if ((isGroup && !config.ANTIDELETE_GROUP) || (!isGroup && !config.ANTIDELETE_PRIVATE)) continue;
 
-    function cachePushName(jid, name) {
-        if (!jid || !name) return;
-        global.pushNameCache.set(jid, name);
-        const norm = jid.split(':')[0];
-        if (norm !== jid) {
-            if (jid.includes('@lid')) global.pushNameCache.set(norm + '@lid', name);
-            else if (jid.includes('@s.whatsapp.net')) global.pushNameCache.set(norm + '@s.whatsapp.net', name);
-        }
-        scheduleCacheSave();
-    }
+                const ownerJid = `${config.OWNER_NUMBER}@s.whatsapp.net`;
+                const cacheKey = `${key.remoteJid}-${key.id}`;
+                const original = messageCache.get(cacheKey);
+                const sender = key.participant || key.remoteJid;
+                const senderNum = sender.split('@')[0];
 
-    // === Consolidated messages.upsert handler ===
-    sock.ev.on('messages.upsert', async ({ messages, type }) => {
-        try {
-            if (!Array.isArray(messages) || messages.length === 0) return;
+                // ── Deleted message ──────────────────────────────────────────────
+                if (update?.message === null) {
+                    if (!original?.message) continue;
+                    const msgObj = original.message;
+                    const mType = Object.keys(msgObj)[0];
+                    const label = isGroup ? `Group: ${key.remoteJid.split('@')[0]}` : 'Private';
 
-            for (const m of messages) {
-                const remoteJid = m.key?.remoteJid || '';
-
-                if (m.pushName) {
-                    if (m.key?.participant) {
-                        cachePushName(m.key.participant, m.pushName);
-                        if (m.key.participantPn) {
-                            cachePushName(m.key.participantPn, m.pushName);
-                            cacheLidPhone(m.key.participant, m.key.participantPn);
+                    try {
+                        await sock.sendMessage(ownerJid, {
+                            text: `🗑️ *Deleted Message Recovered*\n👤 From: @${senderNum}\n📌 ${label}`,
+                            contextInfo: globalContextInfo,
+                            mentions: [sender]
+                        });
+                        if (["conversation", "extendedTextMessage"].includes(mType)) {
+                            const text = msgObj.conversation || msgObj.extendedTextMessage?.text || '';
+                            await sock.sendMessage(ownerJid, { text, contextInfo: globalContextInfo });
+                        } else if (["imageMessage", "videoMessage", "audioMessage", "stickerMessage", "documentMessage"].includes(mType)) {
+                            const stream = await downloadContentFromMessage(msgObj[mType], mType.replace("Message", ""));
+                            let buffer = Buffer.from([]);
+                            for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
+                            const field = mType.replace("Message", "");
+                            const payload = { [field]: buffer, contextInfo: globalContextInfo };
+                            if (msgObj[mType]?.caption) payload.caption = msgObj[mType].caption;
+                            await sock.sendMessage(ownerJid, payload);
                         }
-                    } else if (remoteJid) {
-                        cachePushName(remoteJid, m.pushName);
-                        if (m.key?.senderPn) {
-                            cachePushName(m.key.senderPn, m.pushName);
-                            cacheLidPhone(remoteJid, m.key.senderPn);
-                        }
+                    } catch (err) {
+                        logMessage("DEBUG", `Delete recovery failed: ${err.message}`);
                     }
                 }
-                if (m.key?.participant && m.key?.participantPn) {
-                    cacheLidPhone(m.key.participant, m.key.participantPn);
-                }
-                if (m.key?.senderLid && m.key?.senderPn) {
-                    cacheLidPhone(m.key.senderLid, m.key.senderPn);
-                }
 
-                // ── Muted-member enforcement ───────
-                if (remoteJid.endsWith('@g.us') && !m.key.fromMe && m.key.participant) {
-                    const mutedSet = global.groupMutedMembers?.get(remoteJid);
-                    if (mutedSet?.has(m.key.participant)) {
-                        try {
-                            await sock.sendMessage(remoteJid, { delete: m.key });
-                        } catch { /* ignore */ }
+                // ── Edited message ───────────────────────────────────────────────
+                const editedMsg = update?.message?.protocolMessage?.editedMessage;
+                if (editedMsg) {
+                    const oldText = original?.message?.conversation || original?.message?.extendedTextMessage?.text || '(unknown)';
+                    const newText = editedMsg.conversation || editedMsg.extendedTextMessage?.text || '(media)';
+                    const label = isGroup ? `Group: ${key.remoteJid.split('@')[0]}` : 'Private';
+                    try {
+                        await sock.sendMessage(ownerJid, {
+                            text: `✏️ *Edited Message*\n👤 From: @${senderNum}\n📌 ${label}\n\n*Before:* ${oldText}\n*After:* ${newText}`,
+                            contextInfo: globalContextInfo,
+                            mentions: [sender]
+                        });
+                    } catch (err) {
+                        logMessage("DEBUG", `Edit recovery failed: ${err.message}`);
+                    }
+                }
+            }
+        });
+
+        sock.ev.on('messages.delete', async (item) => {
+            try {
+                logMessage('DEBUG', 'messages.delete triggered');
+                const keys = Array.isArray(item) ? item.map(i => i.key) : (item?.keys || []);
+                for (const key of keys) {
+                    const from = key.remoteJid;
+                    const isGroupChat = from?.endsWith?.('@g.us');
+                    if ((isGroupChat && !config.ANTIDELETE_GROUP) || (!isGroupChat && !config.ANTIDELETE_PRIVATE)) continue;
+
+                    const cacheKey = `${from}-${key.id}`;
+                    const cached = messageCache.get(cacheKey);
+                    const storedMsg = cached?.message || store.loadMessage(from, key.id)?.message;
+                    if (!storedMsg) {
+                        logMessage('WARN', `No cached message for anti-delete: ${key.id}`);
                         continue;
                     }
-                }
 
-                // ── Anti-Flood enforcement ────────────────────────────────────────────
-                if (remoteJid.endsWith('@g.us') && !m.key.fromMe && m.key.participant) {
-                    const isFlooding = global.antifloodTrack?.(remoteJid, m.key.participant);
-                    if (isFlooding) {
-                        try {
-                            const floodGs = global.antifloodSettings?.get(remoteJid);
-                            if (floodGs?.enabled) {
-                                const num = m.key.participant.split('@')[0];
-                                await sock.sendMessage(remoteJid, {
-                                    text: `⚠️ @${num} has been removed for flooding.`,
-                                    mentions: [m.key.participant],
-                                });
-                                await sock.groupParticipantsUpdate(remoteJid, [m.key.participant], 'remove');
-                            }
-                        } catch { /* ignore */ }
+                    const ownerJid = `${config.OWNER_NUMBER}@s.whatsapp.net`;
+                    const sender = key.participant || from;
+                    const senderName = (sender || '').split('@')[0];
+                    const msgType = Object.keys(storedMsg)[0];
+                    const caption = `🗑️ *Anti-Delete Alert!*\n\n👤 *Sender:* @${senderName}\n📌 *Chat:* ${isGroupChat ? 'Group' : 'Private'}\n\n💬 *Restored Message:*`;
+                    const opts = { contextInfo: { mentionedJid: [sender] } };
+
+                    try {
+                        if (["conversation", "extendedTextMessage"].includes(msgType)) {
+                            const text = storedMsg.conversation || storedMsg.extendedTextMessage?.text || '';
+                            await sock.sendMessage(ownerJid, { text: `${caption}\n\n${text}`, ...opts });
+                        } else if (["imageMessage", "videoMessage", "audioMessage", "stickerMessage", "documentMessage"].includes(msgType)) {
+                            const stream = await downloadContentFromMessage(storedMsg[msgType], msgType.replace("Message", ""));
+                            let buffer = Buffer.from([]);
+                            for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
+                            const field = msgType.replace("Message", "");
+                            const payload = { [field]: buffer, ...opts };
+                            if (storedMsg[msgType]?.caption) payload.caption = `${caption}\n\n${storedMsg[msgType].caption}`;
+                            else payload.caption = caption;
+                            await sock.sendMessage(ownerJid, payload);
+                        } else {
+                            await sock.sendMessage(ownerJid, { text: `${caption}\n\n[${msgType}]`, ...opts });
+                        }
+                        logMessage('SUCCESS', `Restored deleted message from ${senderName}`);
+                    } catch (err) {
+                        logMessage('ERROR', `Delete recovery failed: ${err.message}`);
                     }
                 }
-
-                if (type && type !== 'notify') continue;
-
-                const msgTs = (m.messageTimestamp || 0) * 1000;
-                if (msgTs && (Date.now() - msgTs) > 5 * 60 * 1000) continue;
-
-                const cmdMsgId = m.key.id;
-                if (cmdMsgId && seenCmdIds.has(cmdMsgId)) continue;
-                if (cmdMsgId) seenCmdIds.add(cmdMsgId);
-
-                if (!m.message) continue;
-
-                // ── Anti-ViewOnce: auto-reveal and forward to owner ─────────────────
-                if (global.antivvEnabled && !m.key.fromMe) {
-                    const vMsg =
-                        m.message?.viewOnceMessageV2?.message ||
-                        m.message?.viewOnceMessageV2Extension?.message ||
-                        m.message?.viewOnceMessage?.message;
-
-                    if (vMsg) {
-                        const ownerJid = `${config.OWNER_NUMBER}@s.whatsapp.net`;
-                        const chatJid  = m.key.remoteJid;
-                        const senderJid = m.key.participant || chatJid;
-                        const senderNum = senderJid.split('@')[0];
-                        const chatLabel = chatJid.endsWith('@g.us') ? `Group: ${chatJid.split('@')[0]}` : 'Private';
-
-                        let revealType = null;
-                        for (const t of ['imageMessage', 'videoMessage', 'audioMessage']) {
-                            if (vMsg[t]) { revealType = t; break; }
-                        }
-
-                        if (revealType) {
-                            try {
-                                const stream = await downloadContentFromMessage(vMsg[revealType], revealType.replace('Message', ''));
-                                let buffer = Buffer.from([]);
-                                for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
-
-                                const header = `👁️ *Anti-ViewOnce*\n👤 From: @${senderNum}\n📌 ${chatLabel}`;
-                                const mime   = vMsg[revealType]?.mimetype;
-
-                                if (revealType === 'imageMessage') {
-                                    await sock.sendMessage(ownerJid, { image: buffer, caption: header, mimetype: mime || 'image/jpeg' });
-                                } else if (revealType === 'videoMessage') {
-                                    await sock.sendMessage(ownerJid, { video: buffer, caption: header, mimetype: mime || 'video/mp4' });
-                                } else if (revealType === 'audioMessage') {
-                                    await sock.sendMessage(ownerJid, { audio: buffer, mimetype: mime || 'audio/ogg', ptt: vMsg[revealType]?.ptt || false });
-                                    await sock.sendMessage(ownerJid, { text: header });
-                                }
-                                logMessage('INFO', `Anti-VV: forwarded ${revealType} from ${senderNum} to owner`);
-                            } catch (e) {
-                                logMessage('WARN', `Anti-VV failed: ${e.message}`);
-                            }
-                        }
-                    }
-                }
-
-                const sender = m.key.remoteJid;
-                const isGroupMsg = isJidGroup(sender);
-                const isBroadcast = isJidBroadcast(sender) || isJidStatusBroadcast(sender);
-
-                logMessage('MESSAGE', `New ${isGroupMsg ? 'group' : isBroadcast ? 'broadcast' : 'private'} message from ${sender}`);
-
-                if (config.READ_MESSAGE) {
-                    try { await sock.readMessages([m.key]); } catch (e) { /* ignore */ }
-                }
-                await handleMessages(sock, m);
+            } catch (err) {
+                logMessage('ERROR', `Anti-Delete Error: ${err.stack || err.message}`);
             }
-        } catch (err) {
-            logMessage('ERROR', `messages.upsert consolidated handler error: ${err.stack || err.message}`);
+        });
+
+        // ✅ Group participant events
+        sock.ev.on('group-participants.update', async ({ id, participants, action }) => {
+            try {
+                if (action === 'demote' && global.antiDemoteGroups?.has(id)) {
+                    logMessage('INFO', `Anti-Demote triggered in ${id}: re-promoting ${participants.join(', ')}`);
+                    await sock.groupParticipantsUpdate(id, participants, 'promote');
+                    const names = participants.map(p => `@${p.split('@')[0]}`).join(', ');
+                    await sock.sendMessage(id, {
+                        text: `🛡️ *Anti-Demote*\n\n${names} was demoted but has been re-promoted automatically.`,
+                        mentions: participants
+                    });
+                }
+
+                const ws = global.welcomeSettings?.get(id);
+                if (!ws) return;
+
+                if (action === 'add' && ws.welcome) {
+                    for (const p of participants) {
+                        const name = p.split('@')[0];
+                        const text = ws.customWelcome
+                            ? ws.customWelcome.replace(/\{name\}/gi, `@${name}`)
+                            : `👋 Welcome to the group, @${name}! Glad to have you here. 🎉`;
+                        await sock.sendMessage(id, { text, mentions: [p] });
+                    }
+                }
+
+                if ((action === 'remove' || action === 'leave') && ws.goodbye) {
+                    for (const p of participants) {
+                        const name = p.split('@')[0];
+                        const text = ws.customGoodbye
+                            ? ws.customGoodbye.replace(/\{name\}/gi, `@${name}`)
+                            : `👋 Goodbye @${name}, take care! We'll miss you.`;
+                        await sock.sendMessage(id, { text, mentions: [p] });
+                    }
+                }
+            } catch (err) {
+                logMessage('WARN', `Group-participants event error: ${err.message}`);
+            }
+        });
+
+        function cacheLidPhone(lid, phone) {
+            if (!lid || !phone) return;
+            const normLid = lid.split(':')[0].split('@')[0];
+            const normPhone = phone.split('@')[0].replace(/:/g, '').replace(/\D/g, '');
+            if (!normLid || !normPhone || normPhone.length < 7) return;
+            global.lidPhoneCache.set(normLid, normPhone);
+            global.lidPhoneCache.set(normLid + '@lid', normPhone);
+            if (_globalLidMapping) _globalLidMapping.set(normLid + '@lid', normPhone + '@s.whatsapp.net');
+            scheduleCacheSave();
+        }
+
+        function cachePushName(jid, name) {
+            if (!jid || !name) return;
+            global.pushNameCache.set(jid, name);
+            const norm = jid.split(':')[0];
+            if (norm !== jid) {
+                if (jid.includes('@lid')) global.pushNameCache.set(norm + '@lid', name);
+                else if (jid.includes('@s.whatsapp.net')) global.pushNameCache.set(norm + '@s.whatsapp.net', name);
+            }
+            scheduleCacheSave();
+        }
+
+        // === Consolidated messages.upsert handler ===
+        sock.ev.on('messages.upsert', async ({ messages, type }) => {
+            try {
+                if (!Array.isArray(messages) || messages.length === 0) return;
+
+                for (const m of messages) {
+                    const remoteJid = m.key?.remoteJid || '';
+
+                    if (m.pushName) {
+                        if (m.key?.participant) {
+                            cachePushName(m.key.participant, m.pushName);
+                            if (m.key.participantPn) {
+                                cachePushName(m.key.participantPn, m.pushName);
+                                cacheLidPhone(m.key.participant, m.key.participantPn);
+                            }
+                        } else if (remoteJid) {
+                            cachePushName(remoteJid, m.pushName);
+                            if (m.key?.senderPn) {
+                                cachePushName(m.key.senderPn, m.pushName);
+                                cacheLidPhone(remoteJid, m.key.senderPn);
+                            }
+                        }
+                    }
+                    if (m.key?.participant && m.key?.participantPn) {
+                        cacheLidPhone(m.key.participant, m.key.participantPn);
+                    }
+                    if (m.key?.senderLid && m.key?.senderPn) {
+                        cacheLidPhone(m.key.senderLid, m.key.senderPn);
+                    }
+
+                    // ── Muted-member enforcement ───────
+                    if (remoteJid.endsWith('@g.us') && !m.key.fromMe && m.key.participant) {
+                        const mutedSet = global.groupMutedMembers?.get(remoteJid);
+                        if (mutedSet?.has(m.key.participant)) {
+                            try {
+                                await sock.sendMessage(remoteJid, { delete: m.key });
+                            } catch { /* ignore */ }
+                            continue;
+                        }
+                    }
+
+                    // ── Anti-Flood enforcement ────────────────────────────────────────────
+                    if (remoteJid.endsWith('@g.us') && !m.key.fromMe && m.key.participant) {
+                        const isFlooding = global.antifloodTrack?.(remoteJid, m.key.participant);
+                        if (isFlooding) {
+                            try {
+                                const floodGs = global.antifloodSettings?.get(remoteJid);
+                                if (floodGs?.enabled) {
+                                    const num = m.key.participant.split('@')[0];
+                                    await sock.sendMessage(remoteJid, {
+                                        text: `⚠️ @${num} has been removed for flooding.`,
+                                        mentions: [m.key.participant],
+                                    });
+                                    await sock.groupParticipantsUpdate(remoteJid, [m.key.participant], 'remove');
+                                }
+                            } catch { /* ignore */ }
+                        }
+                    }
+
+                    if (type && type !== 'notify') continue;
+
+                    const msgTs = (m.messageTimestamp || 0) * 1000;
+                    if (msgTs && (Date.now() - msgTs) > 5 * 60 * 1000) continue;
+
+                    const cmdMsgId = m.key.id;
+                    if (cmdMsgId && seenCmdIds.has(cmdMsgId)) continue;
+                    if (cmdMsgId) seenCmdIds.add(cmdMsgId);
+
+                    if (!m.message) continue;
+
+                    // ── Anti-ViewOnce: auto-reveal and forward to owner ─────────────────
+                    if (global.antivvEnabled && !m.key.fromMe) {
+                        const vMsg =
+                            m.message?.viewOnceMessageV2?.message ||
+                            m.message?.viewOnceMessageV2Extension?.message ||
+                            m.message?.viewOnceMessage?.message;
+
+                        if (vMsg) {
+                            const ownerJid = `${config.OWNER_NUMBER}@s.whatsapp.net`;
+                            const chatJid = m.key.remoteJid;
+                            const senderJid = m.key.participant || chatJid;
+                            const senderNum = senderJid.split('@')[0];
+                            const chatLabel = chatJid.endsWith('@g.us') ? `Group: ${chatJid.split('@')[0]}` : 'Private';
+
+                            let revealType = null;
+                            for (const t of ['imageMessage', 'videoMessage', 'audioMessage']) {
+                                if (vMsg[t]) { revealType = t; break; }
+                            }
+
+                            if (revealType) {
+                                try {
+                                    const stream = await downloadContentFromMessage(vMsg[revealType], revealType.replace('Message', ''));
+                                    let buffer = Buffer.from([]);
+                                    for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
+
+                                    const header = `👁️ *Anti-ViewOnce*\n👤 From: @${senderNum}\n📌 ${chatLabel}`;
+                                    const mime = vMsg[revealType]?.mimetype;
+
+                                    if (revealType === 'imageMessage') {
+                                        await sock.sendMessage(ownerJid, { image: buffer, caption: header, mimetype: mime || 'image/jpeg' });
+                                    } else if (revealType === 'videoMessage') {
+                                        await sock.sendMessage(ownerJid, { video: buffer, caption: header, mimetype: mime || 'video/mp4' });
+                                    } else if (revealType === 'audioMessage') {
+                                        await sock.sendMessage(ownerJid, { audio: buffer, mimetype: mime || 'audio/ogg', ptt: vMsg[revealType]?.ptt || false });
+                                        await sock.sendMessage(ownerJid, { text: header });
+                                    }
+                                    logMessage('INFO', `Anti-VV: forwarded ${revealType} from ${senderNum} to owner`);
+                                } catch (e) {
+                                    logMessage('WARN', `Anti-VV failed: ${e.message}`);
+                                }
+                            }
+                        }
+                    }
+
+                    const sender = m.key.remoteJid;
+                    const isGroupMsg = isJidGroup(sender);
+                    const isBroadcast = isJidBroadcast(sender) || isJidStatusBroadcast(sender);
+
+                    logMessage('MESSAGE', `New ${isGroupMsg ? 'group' : isBroadcast ? 'broadcast' : 'private'} message from ${sender}`);
+
+                    if (config.READ_MESSAGE) {
+                        try { await sock.readMessages([m.key]); } catch (e) { /* ignore */ }
+                    }
+                    await handleMessages(sock, m);
+                }
+            } catch (err) {
+                logMessage('ERROR', `messages.upsert consolidated handler error: ${err.stack || err.message}`);
+            }
+        });
         }
     });
 
@@ -940,7 +949,7 @@ app.listen(port, () => {
             ? `${process.env.APP_URL.replace(/\/$/, '')}/ping`
             : keepAliveUrl;
         const https = require('https');
-        const http  = require('http');
+        const http = require('http');
         const pinger = pingUrl.startsWith('https') ? https : http;
 
         setInterval(() => {
